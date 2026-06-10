@@ -15,6 +15,8 @@ npm run tauri:dev
 npm run tauri:build
 ```
 
+See [docs/release.md](docs/release.md) for installer modes, portable distribution, manual updates, and smoke-test checklist.
+
 ## Phase 1 scaffold
 
 - Tauri shell with file open/save dialogs
@@ -34,10 +36,12 @@ npm run tauri:build
 
 ## Phase 5 (complete)
 
-- **Settings** (`Ctrl+,` / File → Settings): theme, session restore, font size, wrap, zoom, emoji save mode, raw pane on startup, update checks, auto-save interval
+- **Settings** (`Ctrl+,` / File → Settings): all `AppConfig` fields; changes apply immediately
 - **Find/replace**: `Ctrl+F` / `Ctrl+H`
 - **Recent files**: File → Open Recent (last 10 paths)
-- **Updates**: Help → Check for Updates dialog stub (full auto-updater deferred to release engineering)
+- **Updates**: Help → Check for Updates (manual path + releases link); startup check logs when enabled
+- **Release docs**: [docs/release.md](docs/release.md) — build, portable mode, NSIS, smoke tests
+- **Deferred**: code signing, `tauri-plugin-updater` + release endpoint
 
 ## Phase 6 (mostly complete)
 

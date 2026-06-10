@@ -35,6 +35,9 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "shortDescription": "WYSIWYG Markdown editor for Windows",
+    "longDescription": "MD is a lightweight Typora-style Markdown desktop editor with tabs, session restore, and GFM-oriented round-trip editing.",
+    "publisher": "caio",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -51,8 +54,13 @@
       }
     ],
     "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      },
       "nsis": {
-        "installMode": "both"
+        "installMode": "both",
+        "displayLanguageSelector": false
       }
     }
   },

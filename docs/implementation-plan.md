@@ -156,21 +156,25 @@ Advanced Markdown features and safer link handling.
 
 ---
 
-### Phase 5 — Settings, updates, and release (in progress)
+### Phase 5 — Settings, updates, and release (complete)
 
 Ship-quality desktop product.
 
 #### Completed
 
 - **Settings dialog** (`SettingsDialog.tsx`) — exposes all `AppConfig` fields (session restore, theme, font size, word wrap, editor zoom, emoji save mode, raw pane on startup, auto-save interval, update checks); changes apply immediately via `updateConfig` and persist to `config.json`; Reset to defaults button; File menu entry + `Ctrl+,`
-- **Update check stub** — Help → "Check for Updates…" opens `UpdateCheckDialog.tsx` (current version + View releases link via opener plugin); startup check honors `config.checkUpdates` as a logging no-op until a release endpoint exists
+- **Update check** — Help → "Check for Updates…" opens `UpdateCheckDialog.tsx` with installed/latest version placeholders, manual update steps, and View releases link (`src/lib/updateCheck.ts`); startup check honors `config.checkUpdates` via `runStartupUpdateCheck` (structured console log, no network)
 - **Recent files** — last 10 opened/saved paths in `config.recentFiles` (TS `AppConfig` + Rust struct with `#[serde(default)]`); File > Open Recent items + Clear Recent
 - **Find/replace** (`FindReplaceBar.tsx`) — `Ctrl+F` find / `Ctrl+H` replace over the active editor; ProseMirror decoration highlights, match count, next/prev (Enter/Shift+Enter), replace one/all, Escape closes
+- **Release documentation** — `docs/release.md` (build, portable mode, NSIS modes, manual update path, smoke-test checklist)
+- **Version single source** — UI reads `__APP_VERSION__` from `package.json` at build time (`AboutDialog`, `UpdateCheckDialog`)
+- **Installer metadata** — `tauri.conf.json` bundle descriptions, publisher, WebView2 bootstrapper, NSIS `installMode: both`
 
-#### Deferred (release engineering)
+#### Deferred (post-v1 release engineering)
 
-- Full auto-update requires `tauri-plugin-updater`, a signing keypair, and a release endpoint — out of scope without a remote/release server
-- Installer smoke tests (per-user + per-machine NSIS modes) and portable bundle docs remain manual QA tasks
+- `tauri-plugin-updater` + signing keypair + release endpoint (documented in `docs/release.md`)
+- Code signing for Windows SmartScreen trust
+- Installer smoke tests on clean VMs (checklist in `docs/release.md`; manual QA)
 
 ---
 
@@ -271,4 +275,4 @@ npx tsc --noEmit       # Typecheck
 - [x] Settings UI exposes all `AppConfig` fields
 - [x] Auto-update or documented manual update path (manual check dialog; full updater is a release-engineering follow-up)
 - [x] Markdown Guide checklist at ≥90% for writer-facing syntax (definition lists, escaping, HTML blocks excluded)
-- [ ] Installer + portable mode verified on clean machines
+- [ ] Installer + portable mode verified on clean machines (checklist in `docs/release.md`)
