@@ -8,6 +8,12 @@ import {
   TEXT_COLOR_PRESETS,
 } from "./constants/colors";
 import { markRegistry } from "./markRegistry";
+import {
+  getActiveHighlightColor,
+  getActiveTextColor,
+  getMarkToolbarIcon,
+  ToolbarIcon,
+} from "./toolbarIcons";
 
 interface EditorBubbleMenuProps {
   editor: Editor;
@@ -87,6 +93,64 @@ function clampToolbarPosition(
   };
 }
 
+function ColorPopover({
+  title,
+  presets,
+  customColor,
+  onPick,
+  onClear,
+  clearLabel,
+}: {
+  title: string;
+  presets: typeof TEXT_COLOR_PRESETS;
+  customColor: string;
+  onPick: (color: string) => void;
+  onClear: () => void;
+  clearLabel: string;
+}) {
+  return (
+    <div className="selection-toolbar__popover" role="group" aria-label={title}>
+      <div className="selection-toolbar__popover-title">{title}</div>
+      <div className="selection-toolbar__swatches">
+        {presets.filter((preset) => preset.value).map((preset) => (
+          <button
+            key={preset.id}
+            type="button"
+            className="selection-toolbar__color"
+            title={preset.label}
+            style={{ backgroundColor: preset.value }}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              onPick(preset.value);
+            }}
+          />
+        ))}
+      </div>
+      <label className="selection-toolbar__custom-color">
+        <span>Custom</span>
+        <input
+          type="color"
+          value={customColor}
+          aria-label={`${title} custom color`}
+          onMouseDown={(event) => event.preventDefault()}
+          onChange={(event) => onPick(event.target.value)}
+        />
+      </label>
+      <button
+        type="button"
+        className="selection-toolbar__button selection-toolbar__button--compact"
+        title={clearLabel}
+        onMouseDown={(event) => {
+          event.preventDefault();
+          onClear();
+        }}
+      >
+        {clearLabel}
+      </button>
+    </div>
+  );
+}
+
 export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -97,6 +161,8 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
   const [linkHref, setLinkHref] = useState("");
   const [linkTitle, setLinkTitle] = useState("");
   const [hasExistingLink, setHasExistingLink] = useState(false);
+  const [customTextColor, setCustomTextColor] = useState("#2563eb");
+  const [customHighlightColor, setCustomHighlightColor] = useState("#fde68a");
 
   const openLinkDialog = useCallback(() => {
     const attrs = editor.getAttributes("link");
@@ -134,6 +200,8 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
       return;
     }
 
+    setCustomTextColor(getActiveTextColor(editor));
+    setCustomHighlightColor(getActiveHighlightColor(editor));
     setVisible(true);
     window.requestAnimationFrame(() => {
       const toolbar = toolbarRef.current;
@@ -189,6 +257,8 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
     return linkDialogOpen ? createPortal(linkDialog, document.body) : null;
   }
 
+  const activeTextColor = getActiveTextColor(editor);
+
   return createPortal(
     <div
       ref={toolbarRef}
@@ -209,61 +279,53 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
             isMarkActive(editor, entry.id) ? "is-active" : ""
           }`}
           title={entry.label}
+          aria-label={entry.label}
           onMouseDown={(event) => {
             event.preventDefault();
             entry.run(editor);
           }}
         >
-          {entry.shortcutLabel ?? entry.label.slice(0, 1)}
+          <ToolbarIcon id={getMarkToolbarIcon(entry.id)} />
         </button>
       ))}
       <span className="selection-toolbar__divider" aria-hidden="true" />
       <div className="selection-toolbar__group">
         <button
           type="button"
-          className={`selection-toolbar__button ${
+          className={`selection-toolbar__button selection-toolbar__button--color ${
             textColorsOpen ? "is-active" : ""
           }`}
           title="Text color"
+          aria-label="Text color"
           onMouseDown={(event) => {
             event.preventDefault();
             setTextColorsOpen((open) => !open);
             setHighlightColorsOpen(false);
           }}
         >
-          A
+          <span
+            className="selection-toolbar__text-color-glyph"
+            style={{ borderBottomColor: activeTextColor }}
+          >
+            A
+          </span>
         </button>
         {textColorsOpen ? (
-          <div className="selection-toolbar__popover">
-            {TEXT_COLOR_PRESETS.filter((preset) => preset.value).map(
-              (preset) => (
-                <button
-                  key={preset.id}
-                  type="button"
-                  className="selection-toolbar__color"
-                  title={`Text color: ${preset.label}`}
-                  style={{ backgroundColor: preset.value }}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    editor.chain().focus().setColor(preset.value).run();
-                    setTextColorsOpen(false);
-                  }}
-                />
-              ),
-            )}
-            <button
-              type="button"
-              className="selection-toolbar__button selection-toolbar__button--compact"
-              title="Reset text color"
-              onMouseDown={(event) => {
-                event.preventDefault();
-                editor.chain().focus().unsetColor().run();
-                setTextColorsOpen(false);
-              }}
-            >
-              Reset
-            </button>
-          </div>
+          <ColorPopover
+            title="Text color"
+            presets={TEXT_COLOR_PRESETS}
+            customColor={customTextColor}
+            onPick={(color) => {
+              setCustomTextColor(color);
+              editor.chain().focus().setColor(color).run();
+              setTextColorsOpen(false);
+            }}
+            onClear={() => {
+              editor.chain().focus().unsetColor().run();
+              setTextColorsOpen(false);
+            }}
+            clearLabel="Reset"
+          />
         ) : null}
       </div>
       <div className="selection-toolbar__group">
@@ -273,49 +335,31 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
             highlightColorsOpen ? "is-active" : ""
           }`}
           title="Highlight color"
+          aria-label="Highlight color"
           onMouseDown={(event) => {
             event.preventDefault();
             setHighlightColorsOpen((open) => !open);
             setTextColorsOpen(false);
           }}
         >
-          HL
+          <ToolbarIcon id="highlightColor" />
         </button>
         {highlightColorsOpen ? (
-          <div className="selection-toolbar__popover">
-            {HIGHLIGHT_COLOR_PRESETS.filter((preset) => preset.value).map(
-              (preset) => (
-                <button
-                  key={`hl-${preset.id}`}
-                  type="button"
-                  className="selection-toolbar__color"
-                  title={`Highlight: ${preset.label}`}
-                  style={{ backgroundColor: preset.value }}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    editor
-                      .chain()
-                      .focus()
-                      .setHighlight({ color: preset.value })
-                      .run();
-                    setHighlightColorsOpen(false);
-                  }}
-                />
-              ),
-            )}
-            <button
-              type="button"
-              className="selection-toolbar__button selection-toolbar__button--compact"
-              title="Remove highlight"
-              onMouseDown={(event) => {
-                event.preventDefault();
-                editor.chain().focus().unsetHighlight().run();
-                setHighlightColorsOpen(false);
-              }}
-            >
-              Clear
-            </button>
-          </div>
+          <ColorPopover
+            title="Highlight color"
+            presets={HIGHLIGHT_COLOR_PRESETS}
+            customColor={customHighlightColor}
+            onPick={(color) => {
+              setCustomHighlightColor(color);
+              editor.chain().focus().setHighlight({ color }).run();
+              setHighlightColorsOpen(false);
+            }}
+            onClear={() => {
+              editor.chain().focus().unsetHighlight().run();
+              setHighlightColorsOpen(false);
+            }}
+            clearLabel="Clear"
+          />
         ) : null}
       </div>
       <span className="selection-toolbar__divider" aria-hidden="true" />
@@ -325,13 +369,28 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
           editor.isActive("link") ? "is-active" : ""
         }`}
         title={editor.isActive("link") ? "Edit link" : "Add link"}
+        aria-label={editor.isActive("link") ? "Edit link" : "Add link"}
         onMouseDown={(event) => {
           event.preventDefault();
           openLinkDialog();
         }}
       >
-        ://
+        <ToolbarIcon id="link" />
       </button>
+      {editor.isActive("link") ? (
+        <button
+          type="button"
+          className="selection-toolbar__button"
+          title="Remove link"
+          aria-label="Remove link"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            removeLink();
+          }}
+        >
+          <ToolbarIcon id="linkRemove" />
+        </button>
+      ) : null}
       {linkDialog}
     </div>,
     document.body,

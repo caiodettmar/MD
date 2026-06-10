@@ -81,7 +81,8 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Fenced code block | Slash menu / TipTap | Shiki highlighting |
 | ✅ | Fenced code + language | ` ```lang ` at line start | `inlineBlockTriggers.ts` |
 | ✅ | Tables | Slash menu "Table" (3x3 + header) | WYSIWYG borders + resizable columns; no markdown line-start trigger |
-| ✅ | Images | Slash menu "Image" → URL/path dialog + local file picker (Tauri) | `convertFileSrc` for absolute paths; relative paths resolve from doc directory |
+| ✅ | Images | Slash menu "Image" → URL/path dialog + local file picker (Tauri) | Relative paths resolve from doc directory; `markdownSrc` + refresh plugin keep local images stable across raw/WYSIWYG sync |
+| ✅ | Raw HTML images | `<img>` / `<picture>` in raw pane | Parsed into image nodes; round-trip via markdown or HTML with `data-md-src` |
 | ⬜ | Definition lists | — | Not implemented |
 | ✅ | Paragraphs | Default | |
 
@@ -108,11 +109,11 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | Status | Item | Notes |
 |--------|------|-------|
 | ✅ | Appears on text selection | Custom portal toolbar (not static bar) |
-| ✅ | Bold / italic / strike / highlight / underline / code | Via `markRegistry` |
-| ✅ | Text color swatches | Popover in selection toolbar; preset colors + reset |
-| ✅ | Highlight color swatches | Popover in selection toolbar; presets + remove highlight |
+| ✅ | Bold / italic / strike / highlight / underline / code | Via `markRegistry` | SVG icons + tooltips |
+| ✅ | Text color swatches | Popover in selection toolbar | Presets, custom color input, reset |
+| ✅ | Highlight color swatches | Popover in selection toolbar | Presets, custom color input, clear highlight |
 | ⬜ | Heading / list / quote actions | Spec mentioned Word-like bar; not implemented |
-| ✅ | Link edit / remove | Link button → `LinkEditDialog` (add/update/remove, optional title) |
+| ✅ | Link edit / remove | Link + unlink icons → `LinkEditDialog` (add/update/remove, optional title) |
 | ✅ | Selection toolbar overflow | Compact layout with color popovers; clamped positioning on narrow windows |
 
 ---
@@ -156,7 +157,7 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Markdown paste (plain text) | `markdownPaste.ts` |
 | ✅ | Colored text in raw pane | HTML span serialization |
 | ✅ | Subscript / superscript in raw pane | `<sub>` / `<sup>` HTML serialization; round-trip via markdown HTML parse |
-| 🟡 | Markdown Guide — basic syntax | Covered incl. images/links; escaping + raw HTML blocks out of scope |
+| 🟡 | Markdown Guide — basic syntax | Covered incl. images/links and raw `<img>` HTML fallback; escaping + raw HTML blocks out of scope |
 | 🟡 | Markdown Guide — extended syntax | Tables, tasks, strike, highlight, footnotes, sub/sup covered; definition lists missing |
 | 🟡 | Markdown Guide — hacks | Underline, sub/sup done; definition lists, indent tricks not planned |
 | ⬜ | Emoji shortcode round-trip option | `emojiSaveMode: "shortcode"` not enforced |

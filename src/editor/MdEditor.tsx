@@ -9,6 +9,7 @@ import {
 import { SlashMenu } from "../components/SlashMenu";
 import { createEditorExtensions } from "./extensions";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
+import { refreshImageDisplaySrc } from "./markdownImage";
 import { insertConfirmedReferenceDefinition } from "./linkReferenceDefinitionUtils";
 import { setLinkClickHandler } from "./linkClickGuard";
 import {
@@ -109,6 +110,7 @@ export function MdEditor({
         skipExternalSyncRef.current = true;
         const next = currentEditor.getMarkdown();
         if (next === markdownRef.current) {
+          skipExternalSyncRef.current = false;
           return;
         }
 
@@ -156,9 +158,18 @@ export function MdEditor({
       contentType: "markdown",
       emitUpdate: false,
     });
+    refreshImageDisplaySrc(editor);
     markdownRef.current = markdown;
     isEditorReadyRef.current = true;
   }, [editor, markdown, tabId]);
+
+  useEffect(() => {
+    if (!editor) {
+      return;
+    }
+
+    refreshImageDisplaySrc(editor);
+  }, [editor, documentPath]);
 
   const handleReferenceDefinitionConfirm = useCallback(
     (values: ReferenceDefinitionDialogValues) => {

@@ -1,8 +1,85 @@
 import Image from "@tiptap/extension-image";
+import type { Editor } from "@tiptap/core";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
 import {
+  buildImageNodeAttrs,
+  normalizeMarkdownImageSrc,
   toDisplayImageSrc,
   toMarkdownImageSrc,
 } from "../lib/imageSrc";
+
+const imageRefreshKey = new PluginKey("markdownImageRefresh");
+
+function readImageElementAttrs(
+  element: HTMLElement,
+  getDocumentPath: () => string | null,
+) {
+  const rawSrc = element.getAttribute("src") ?? "";
+  if (!rawSrc.trim()) {
+    return false;
+  }
+
+  const dataMarkdownSrc = element.getAttribute("data-md-src");
+  const markdownSrc = dataMarkdownSrc?.trim() || rawSrc.trim();
+
+  return buildImageNodeAttrs(markdownSrc, getDocumentPath(), {
+    alt: element.getAttribute("alt"),
+    title: element.getAttribute("title"),
+  });
+}
+
+function createImageRefreshPlugin(getDocumentPath: () => string | null) {
+  return new Plugin({
+    key: imageRefreshKey,
+    appendTransaction: (transactions, _oldState, newState) => {
+      const shouldRefresh = transactions.some(
+        (transaction) =>
+          transaction.docChanged || transaction.getMeta("refreshImageSrc"),
+      );
+      if (!shouldRefresh) {
+        return null;
+      }
+
+      const documentPath = getDocumentPath();
+      let transaction = newState.tr;
+      let changed = false;
+
+      newState.doc.descendants((node, pos) => {
+        if (node.type.name !== "image") {
+          return;
+        }
+
+        const displaySrc = String(node.attrs.src ?? "");
+        const markdownSrc = normalizeMarkdownImageSrc(
+          displaySrc,
+          node.attrs.markdownSrc as string | null | undefined,
+          documentPath,
+        );
+        const nextDisplaySrc = toDisplayImageSrc(markdownSrc, documentPath);
+        const nextAlt = node.attrs.alt ?? null;
+        const nextTitle = node.attrs.title ?? null;
+
+        if (
+          node.attrs.src === nextDisplaySrc &&
+          node.attrs.markdownSrc === markdownSrc
+        ) {
+          return;
+        }
+
+        transaction = transaction.setNodeMarkup(pos, undefined, {
+          ...node.attrs,
+          src: nextDisplaySrc,
+          markdownSrc,
+          alt: nextAlt,
+          title: nextTitle,
+        });
+        changed = true;
+      });
+
+      return changed ? transaction : null;
+    },
+  });
+}
 
 export function createMarkdownImage(getDocumentPath: () => string | null) {
   return Image.extend({
@@ -25,14 +102,43 @@ export function createMarkdownImage(getDocumentPath: () => string | null) {
       };
     },
 
+    parseHTML() {
+      return [
+        {
+          tag: "img[src]",
+          getAttrs: (element) => {
+            if (!(element instanceof HTMLElement)) {
+              return false;
+            }
+            return readImageElementAttrs(element, getDocumentPath);
+          },
+        },
+        {
+          tag: "picture",
+          getAttrs: (element) => {
+            if (!(element instanceof HTMLElement)) {
+              return false;
+            }
+
+            const img = element.querySelector("img[src]");
+            if (!(img instanceof HTMLImageElement)) {
+              return false;
+            }
+
+            return readImageElementAttrs(img, getDocumentPath);
+          },
+        },
+      ];
+    },
+
     parseMarkdown(token, helpers) {
       const markdownSrc = token.href ?? "";
-      return helpers.createNode("image", {
-        src: toDisplayImageSrc(markdownSrc, getDocumentPath()),
+      const attrs = buildImageNodeAttrs(markdownSrc, getDocumentPath(), {
         alt: token.text,
         title: token.title,
-        markdownSrc,
       });
+
+      return helpers.createNode("image", attrs);
     },
 
     renderMarkdown(node) {
@@ -42,11 +148,20 @@ export function createMarkdownImage(getDocumentPath: () => string | null) {
       const markdownSrc = toMarkdownImageSrc(
         src,
         node.attrs?.markdownSrc as string | null | undefined,
+        getDocumentPath(),
       );
 
       return title
         ? `![${alt}](${markdownSrc} "${title}")`
         : `![${alt}](${markdownSrc})`;
     },
+
+    addProseMirrorPlugins() {
+      return [createImageRefreshPlugin(getDocumentPath)];
+    },
   });
+}
+
+export function refreshImageDisplaySrc(editor: Editor) {
+  editor.view.dispatch(editor.state.tr.setMeta("refreshImageSrc", true));
 }
