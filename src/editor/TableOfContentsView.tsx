@@ -31,9 +31,18 @@ export function TableOfContentsView({
             type="button"
             className="md-toc__toggle"
             aria-expanded={!collapsed}
+            aria-label={
+              collapsed
+                ? "Expand table of contents"
+                : "Collapse table of contents"
+            }
             onClick={() => updateAttributes({ collapsed: !collapsed })}
           >
-            Table of contents
+            <span
+              className={`md-toc__chevron${collapsed ? " is-collapsed" : ""}`}
+              aria-hidden="true"
+            />
+            <span>Table of contents</span>
           </button>
           {selected ? (
             <button

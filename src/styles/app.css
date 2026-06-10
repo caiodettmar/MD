@@ -626,6 +626,29 @@
   padding: 0;
 }
 
+.md-editor-surface .md-toc__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.md-editor-surface .md-toc__chevron {
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+  margin-top: -0.15rem;
+  flex-shrink: 0;
+}
+
+.md-editor-surface .md-toc__chevron.is-collapsed {
+  transform: rotate(-45deg);
+  margin-top: 0.1rem;
+}
+
 .md-editor-surface .md-toc__update {
   color: var(--accent);
   font-size: 0.875rem;

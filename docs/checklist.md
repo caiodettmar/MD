@@ -84,7 +84,7 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Images | `![alt](url)` input rule / slash menu | URL/path dialog + local file picker; click image → Change path / Delete |
 | ✅ | Raw HTML images | `<img>` / `<picture>` in raw pane | Parsed into image nodes; round-trip via markdown or HTML with `data-md-src` |
 | ✅ | Definition lists | Slash menu / `: ` line-start / Kramdown markdown | `Term` + `: definition` lines parse in raw pane; WYSIWYG `<dl>` styling |
-| ✅ | Table of contents | Slash menu `[TOC]` | Scans H1–H3; dotted border box; Update ToC + collapse; heading `id` anchors |
+| ✅ | Table of contents | Slash menu `[TOC]` | Scans H1–H3; dotted border box; raw pane serializes as linked bullet list; chevron collapse; Update ToC |
 | ✅ | Paragraphs | Default | |
 
 ---

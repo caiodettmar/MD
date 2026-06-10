@@ -1,5 +1,6 @@
 import { InputRule, Node, mergeAttributes, type JSONContent } from "@tiptap/core";
 import type { Editor } from "@tiptap/react";
+import { TextSelection } from "@tiptap/pm/state";
 
 export const DefinitionTerm = Node.create({
   name: "definitionTerm",
@@ -308,13 +309,13 @@ export function createDefinitionListInputRule() {
       }
 
       const $from = state.doc.resolve(range.from);
-      const blockDepth = $from.depth;
-      const blockIndex = $from.index(blockDepth);
+      const depth = $from.depth;
+      const blockIndex = $from.index(depth - 1);
       if (blockIndex === 0) {
         return null;
       }
 
-      const parent = $from.node(blockDepth);
+      const parent = $from.node(depth - 1);
       const previous = parent.child(blockIndex - 1);
       if (previous.type.name !== "paragraph") {
         return null;
@@ -325,10 +326,7 @@ export function createDefinitionListInputRule() {
         return null;
       }
 
-      let prevFrom = $from.start(blockDepth);
-      for (let index = 0; index < blockIndex - 1; index += 1) {
-        prevFrom += parent.child(index).nodeSize;
-      }
+      const termStart = $from.before(depth) - previous.nodeSize;
       const currentTo = range.to;
 
       const definitionList = definitionListType.create({}, [
@@ -336,8 +334,11 @@ export function createDefinitionListInputRule() {
         definitionDescriptionType.create({}, [paragraphType.create()]),
       ]);
 
-      const { tr } = state;
-      tr.replaceWith(prevFrom, currentTo, definitionList);
+      state.tr.replaceWith(termStart, currentTo, definitionList);
+
+      const dt = definitionList.child(0);
+      const cursorPos = termStart + 1 + dt.nodeSize + 2;
+      state.tr.setSelection(TextSelection.create(state.tr.doc, cursorPos));
     },
   });
 }

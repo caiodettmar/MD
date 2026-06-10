@@ -1,5 +1,6 @@
 import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
+import type { EditorView } from "@tiptap/pm/view";
 
 export type LinkClickHandler = (href: string) => void;
 
@@ -7,6 +8,22 @@ let linkClickHandler: LinkClickHandler | null = null;
 
 export function setLinkClickHandler(handler: LinkClickHandler | null) {
   linkClickHandler = handler;
+}
+
+function isExternalHref(href: string): boolean {
+  return /^(https?:|mailto:|tel:|ftp:)/i.test(href.trim());
+}
+
+function scrollToEditorAnchor(view: EditorView, href: string) {
+  const id = decodeURIComponent(href.slice(1));
+  if (!id) {
+    return;
+  }
+
+  view.dom.querySelector(`#${CSS.escape(id)}`)?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
 }
 
 const linkGuardKey = new PluginKey("mdLinkGuard");
@@ -40,6 +57,17 @@ export const LinkClickGuard = Extension.create({
                 return false;
               }
 
+              if (href.startsWith("#")) {
+                event.preventDefault();
+                event.stopPropagation();
+                scrollToEditorAnchor(view, href);
+                return true;
+              }
+
+              if (!isExternalHref(href)) {
+                return false;
+              }
+
               event.preventDefault();
               event.stopPropagation();
               linkClickHandler?.(href);
@@ -51,13 +79,29 @@ export const LinkClickGuard = Extension.create({
                 return false;
               }
 
-              if (target.closest("a")) {
+              const anchor = target.closest("a");
+              if (!anchor) {
+                return false;
+              }
+
+              const href = anchor.getAttribute("href");
+              if (!href) {
+                return false;
+              }
+
+              if (href.startsWith("#")) {
                 event.preventDefault();
                 event.stopPropagation();
                 return true;
               }
 
-              return false;
+              if (!isExternalHref(href)) {
+                return false;
+              }
+
+              event.preventDefault();
+              event.stopPropagation();
+              return true;
             },
           },
         },
