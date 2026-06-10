@@ -24,11 +24,12 @@ npm run tauri:build
 - Zoom shortcuts (`Ctrl+±`, `Ctrl+wheel`)
 - Mark registry + toolbar/menu shells for Phase 2
 
-## Phase 4 backlog
+## Phase 4 (complete)
 
-- External links: superscript external indicator (e.g. 🔗)
-- Undo/redo: full history stack with redo (`Ctrl+Y` / `Ctrl+Shift+Z`), not just single-step undo
+- External links: subtle superscript ↗ indicator on `http(s)` links (CSS-only, no serialization impact)
+- Undo/redo: full history stack with redo (`Ctrl+Y` / `Ctrl+Shift+Z`) plus Edit menu entries; raw pane textarea keeps its native undo
 - Reference definitions: completed definitions hidden in WYSIWYG, serialized at document end, editable via **Edit references** panel (View menu)
+- Footnotes: `[^id]` references and multiline `[^id]:` definitions round-trip; definitions stay visible in WYSIWYG (jump-to-definition deferred)
 
 ## Storage
 

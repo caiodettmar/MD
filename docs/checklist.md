@@ -130,7 +130,7 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Edit references panel | View menu; CRUD on completed defs |
 | ✅ | External link click confirmation | Modal before open |
 | ✅ | Open via Tauri opener plugin | Fallback `window.open` in dev |
-| ⬜ | External link visual indicator | README backlog (e.g. 🔗 superscript) |
+| ✅ | External link visual indicator | CSS-only superscript ↗ on `http(s)` hrefs (`app.css`); internal/anchor links unaffected |
 | ⬜ | Inline link title editing | — |
 
 ---
@@ -141,8 +141,8 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 |--------|------|-------|
 | ✅ | `[^id]` reference mark | Input rules (inline + line-start) |
 | ✅ | `[^id]:` definition block | Multiline body support |
-| 🟡 | Footnote defs in WYSIWYG | Visible with label styling; unlike link refs (hidden) |
-| ⬜ | Footnote preview / jump UI | — |
+| ✅ | Footnote defs in WYSIWYG | Visible with label styling by design (defs are content, unlike hidden link refs); round-trip verified |
+| ⬜ | Footnote preview / jump UI | Deferred — click-to-scroll considered, skipped as non-trivial plugin work |
 
 ---
 
@@ -177,9 +177,9 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 
 | Status | Item | Notes |
 |--------|------|-------|
-| 🟡 | Undo | TipTap history (StarterKit); `Ctrl+Z` |
-| 🟡 | Redo | History plugin present; explicit `Ctrl+Y` / `Ctrl+Shift+Z` not documented in shortcuts |
-| ⬜ | Full history polish | README backlog — verify deep stacks & redo UX |
+| ✅ | Undo | TipTap history (StarterKit) handles `Ctrl+Z` in editor; Edit menu entry; global fallback when focus is outside editor |
+| ✅ | Redo | `Ctrl+Y` and `Ctrl+Shift+Z` via TipTap keymap in editor + global fallback (`useKeyboardShortcuts`); Edit menu entry; raw pane/inputs keep native undo |
+| ✅ | Full history polish | Shortcuts skip textarea/input targets; menu actions focus editor before undo/redo |
 
 ---
 
@@ -223,11 +223,10 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 ## Suggested next priorities
 
 1. **Settings dialog** — Expose `AppConfig`; unblocks theme, session, wrap, updates prefs.
-2. **External link indicator** — Small visual affordance for off-site URLs.
-3. **Slash menu: image & table** — Highest-impact Markdown Guide gaps.
-4. **Selection toolbar: link + highlight colors** — Completes formatting bar spec.
-5. **Auto-updater** — Required for v1 release story.
-6. **Automated round-trip tests** — Lock in reference-definition and footnote behavior.
+2. **Slash menu: image & table** — Highest-impact Markdown Guide gaps.
+3. **Selection toolbar: link + highlight colors** — Completes formatting bar spec.
+4. **Auto-updater** — Required for v1 release story.
+5. **Automated round-trip tests** — Lock in reference-definition and footnote behavior.
 
 ---
 
@@ -238,6 +237,6 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | 1 | Shell, tabs, I/O, session, raw pane, zoom | ✅ Complete |
 | 2 | Inline delimiters, slash menu, selection bar | ✅ Complete |
 | 3 | Colors, emoji, Shiki, paste, polish | ✅ Complete |
-| 4 | Links, refs, footnotes, print, stability | 🟡 In progress |
+| 4 | Links, refs, footnotes, print, stability | ✅ Complete (Settings UI & auto-update moved to Phase 5) |
 | 5 | Settings, updates, release QA | ⬜ Planned |
 | 6 | Markdown Guide parity | ⬜ Planned |

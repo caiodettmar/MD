@@ -13,6 +13,7 @@ export function useKeyboardShortcuts() {
   const zoomBy = useEditorStore((state) => state.zoomBy);
   const resetZoom = useEditorStore((state) => state.resetZoom);
   const printActiveTab = useEditorStore((state) => state.printActiveTab);
+  const getActiveEditor = useEditorStore((state) => state.getActiveEditor);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -28,6 +29,34 @@ export function useKeyboardShortcuts() {
       }
 
       const key = event.key.toLowerCase();
+
+      if (key === "z" || key === "y") {
+        const target = event.target;
+        const inNativeField =
+          target instanceof HTMLTextAreaElement ||
+          target instanceof HTMLInputElement;
+        const inEditor =
+          target instanceof HTMLElement && target.isContentEditable;
+
+        // Native fields keep their own undo stack; the WYSIWYG editor
+        // handles Mod-z / Mod-y / Shift-Mod-z via TipTap's keymap.
+        if (inNativeField || inEditor) {
+          return;
+        }
+
+        const editor = getActiveEditor();
+        if (!editor) {
+          return;
+        }
+
+        event.preventDefault();
+        if (key === "y" || (key === "z" && event.shiftKey)) {
+          editor.chain().focus().redo().run();
+        } else {
+          editor.chain().focus().undo().run();
+        }
+        return;
+      }
 
       if (key === "o") {
         event.preventDefault();
@@ -108,6 +137,7 @@ export function useKeyboardShortcuts() {
     closeTab,
     createTab,
     cycleTab,
+    getActiveEditor,
     openFileDialog,
     printActiveTab,
     resetZoom,

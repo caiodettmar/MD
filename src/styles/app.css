@@ -260,6 +260,20 @@
   cursor: pointer;
 }
 
+.md-editor-surface a.md-link[href^="http://"]::after,
+.md-editor-surface a.md-link[href^="https://"]::after {
+  content: "\2197";
+  display: inline-block;
+  margin-left: 0.15em;
+  font-size: 0.7em;
+  vertical-align: super;
+  line-height: 1;
+  color: var(--text-muted);
+  opacity: 0.8;
+  user-select: none;
+  pointer-events: none;
+}
+
 .md-editor-surface sup.md-footnote-ref {
   color: var(--accent);
   font-weight: 600;

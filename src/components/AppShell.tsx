@@ -39,6 +39,7 @@ export function AppShell() {
     (state) => state.toggleReferencesPanel,
   );
   const resetZoom = useEditorStore((state) => state.resetZoom);
+  const getActiveEditor = useEditorStore((state) => state.getActiveEditor);
   const printActiveTab = useEditorStore((state) => state.printActiveTab);
   const persistSession = useEditorStore((state) => state.persistSession);
 
@@ -104,6 +105,28 @@ export function AppShell() {
         ],
       },
       {
+        id: "edit",
+        label: "Edit",
+        items: [
+          {
+            id: "undo",
+            label: "Undo",
+            shortcut: "Ctrl+Z",
+            onSelect: () => {
+              getActiveEditor()?.chain().focus().undo().run();
+            },
+          },
+          {
+            id: "redo",
+            label: "Redo",
+            shortcut: "Ctrl+Y",
+            onSelect: () => {
+              getActiveEditor()?.chain().focus().redo().run();
+            },
+          },
+        ],
+      },
+      {
         id: "view",
         label: "View",
         items: [
@@ -142,6 +165,7 @@ export function AppShell() {
     ],
     [
       createTab,
+      getActiveEditor,
       openFileDialog,
       printActiveTab,
       resetZoom,

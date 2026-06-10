@@ -123,7 +123,7 @@ Extended formatting beyond basic GFM marks.
 
 ---
 
-### Phase 4 — Links, references, footnotes, security (in progress)
+### Phase 4 — Links, references, footnotes, security (complete)
 
 Advanced Markdown features and safer link handling.
 
@@ -141,14 +141,16 @@ Advanced Markdown features and safer link handling.
 - **Print** — Basic print preview via `window.open` + HTML export
 - **Slash menu fixes** — Positioning, duplicate entries, keyboard navigation performance
 - **Editor stability** — OOM/infinite reorder loop fixed; instrumentation removed
+- **External link visual indicator** — CSS-only superscript ↗ on `http(s)` links (`app.css`); no schema or serialization impact; internal/anchor links unaffected
+- **Full undo/redo UX** — `Ctrl+Z` undo, `Ctrl+Y` / `Ctrl+Shift+Z` redo via TipTap keymap in the editor plus a global fallback in `useKeyboardShortcuts` (skips textarea/input targets so the raw pane keeps native undo); Edit menu with Undo/Redo entries
+- **Footnote definitions** — Kept visible in WYSIWYG by design (they are content, unlike hidden link reference definitions); round-trip verified
 
-#### Remaining (see checklist)
+#### Deferred (explicitly Phase 5 / 6)
 
-- External link visual indicator (e.g. superscript icon)
-- Full undo/redo UX (`Ctrl+Y` / `Ctrl+Shift+Z`) verification and polish
-- Settings UI for persisted config
-- Auto-update pipeline
-- Markdown Guide coverage gaps (images, tables UX, sub/superscript typing, etc.)
+- Settings UI for persisted config (Phase 5)
+- Auto-update pipeline (Phase 5)
+- Markdown Guide coverage gaps — images, tables UX, sub/superscript typing, etc. (Phase 6)
+- Footnote click-to-jump UI (nice-to-have; not required for Phase 4)
 
 **Key files:** `src/editor/linkReferenceDefinition*.ts`, `src/components/ReferenceDefinitionDialog.tsx`, `src/editor/footnote*.ts`, `src/editor/markdownLink.ts`
 

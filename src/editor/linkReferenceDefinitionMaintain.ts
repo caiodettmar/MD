@@ -165,7 +165,7 @@ export const LinkReferenceDefinitionMaintain = Extension.create({
               const innerTo = pos + node.nodeSize - 1;
               const currentInner = tr.doc.slice(innerFrom, innerTo);
               const nextInner = Fragment.from(paragraph);
-              if (!currentInner.eq(nextInner)) {
+              if (!currentInner.content.eq(nextInner)) {
                 tr.replaceWith(innerFrom, innerTo, paragraph);
                 changed = true;
               }

@@ -173,7 +173,8 @@ export const MarkdownLink = Link.extend({
 
     return [
       ...parent.map((plugin) => {
-        if (plugin.spec.key?.key !== "autolink" || !plugin.spec.appendTransaction) {
+        const pluginKeyName = (plugin.spec.key as { key?: string } | undefined)?.key;
+        if (pluginKeyName !== "autolink" || !plugin.spec.appendTransaction) {
           return plugin;
         }
 
