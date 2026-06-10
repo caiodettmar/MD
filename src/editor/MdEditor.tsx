@@ -151,6 +151,7 @@ export function MdEditor({
     if (editor.getMarkdown() === markdown) {
       markdownRef.current = markdown;
       isEditorReadyRef.current = true;
+      refreshImageDisplaySrc(editor);
       return;
     }
 
@@ -158,7 +159,11 @@ export function MdEditor({
       contentType: "markdown",
       emitUpdate: false,
     });
-    refreshImageDisplaySrc(editor);
+    queueMicrotask(() => {
+      if (!editor.isDestroyed) {
+        refreshImageDisplaySrc(editor);
+      }
+    });
     markdownRef.current = markdown;
     isEditorReadyRef.current = true;
   }, [editor, markdown, tabId]);

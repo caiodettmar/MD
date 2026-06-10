@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Editor } from "@tiptap/react";
-import { isTauriRuntime, toDisplayImageSrc } from "../lib/imageSrc";
+import { buildImageNodeAttrs, isTauriRuntime } from "../lib/imageSrc";
 import { pickImageFilePath } from "../lib/tauri";
 
 interface ImageInsertDialogProps {
@@ -38,19 +38,10 @@ export function ImageInsertDialog({
       return;
     }
 
-    const trimmedSrc = markdownSrc.trim();
-    editor
-      .chain()
-      .focus()
-      .insertContent({
-        type: "image",
-        attrs: {
-          src: toDisplayImageSrc(trimmedSrc, documentPath),
-          alt: altText.trim() || null,
-          markdownSrc: trimmedSrc,
-        },
-      })
-      .run();
+    const attrs = buildImageNodeAttrs(markdownSrc, documentPath, {
+      alt: altText.trim() || null,
+    });
+    editor.chain().focus().insertContent({ type: "image", attrs }).run();
     onClose();
   };
 

@@ -81,7 +81,7 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Fenced code block | Slash menu / TipTap | Shiki highlighting |
 | ✅ | Fenced code + language | ` ```lang ` at line start | `inlineBlockTriggers.ts` |
 | ✅ | Tables | Slash menu "Table" (3x3 + header) | WYSIWYG borders + resizable columns; no markdown line-start trigger |
-| ✅ | Images | Slash menu "Image" → URL/path dialog + local file picker (Tauri) | Relative paths resolve from doc directory; `markdownSrc` + refresh plugin keep local images stable across raw/WYSIWYG sync |
+| ✅ | Images | Slash menu "Image" → URL/path dialog + local file picker (Tauri) | Relative paths resolve via doc directory; `resolveRelativePath` fixes `./` joins; markdown stores forward-slash relative paths |
 | ✅ | Raw HTML images | `<img>` / `<picture>` in raw pane | Parsed into image nodes; round-trip via markdown or HTML with `data-md-src` |
 | ⬜ | Definition lists | — | Not implemented |
 | ✅ | Paragraphs | Default | |
@@ -114,7 +114,7 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Highlight color swatches | Popover in selection toolbar | Presets, custom color input, clear highlight |
 | ⬜ | Heading / list / quote actions | Spec mentioned Word-like bar; not implemented |
 | ✅ | Link edit / remove | Link + unlink icons → `LinkEditDialog` (add/update/remove, optional title) |
-| ✅ | Selection toolbar overflow | Compact layout with color popovers; clamped positioning on narrow windows |
+| ✅ | Selection toolbar overflow | Single-row toolbar with horizontal scroll; strikethrough icon fixed |
 
 ---
 
@@ -220,6 +220,7 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Slash menu duplicates & lag |
 | ✅ | Code block invisible text (Shiki overlay) |
 | ✅ | Debug instrumentation removed |
+| ✅ | Local image `./path` resolution (`\./` join bug) and toolbar single-row layout |
 
 ---
 

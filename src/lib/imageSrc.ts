@@ -19,15 +19,60 @@ function isAbsolutePath(path: string): boolean {
   return /^([a-zA-Z]:[\\/]|\\\\|\/)/.test(path);
 }
 
-function joinPath(baseDir: string, relativePath: string): string {
-  const separator = baseDir.includes("\\") ? "\\" : "/";
-  const normalizedBase = baseDir.replace(/[\\/]+$/, "");
-  const normalizedRelative = relativePath.replace(/^[\\/]+/, "");
-  return `${normalizedBase}${separator}${normalizedRelative}`;
-}
-
 function normalizePathForCompare(path: string): string {
   return path.replace(/\\/g, "/").toLowerCase();
+}
+
+function splitPathSegments(path: string): string[] {
+  return path.replace(/\\/g, "/").split("/").filter(Boolean);
+}
+
+function resolveRelativePath(relativePath: string, baseDir: string): string {
+  const separator = baseDir.includes("\\") ? "\\" : "/";
+  const baseParts = splitPathSegments(baseDir.replace(/[\\/]+$/, ""));
+  const relativeParts = splitPathSegments(relativePath);
+
+  for (const part of relativeParts) {
+    if (part === ".") {
+      continue;
+    }
+
+    if (part === "..") {
+      if (baseParts.length > 0) {
+        baseParts.pop();
+      }
+      continue;
+    }
+
+    baseParts.push(part);
+  }
+
+  if (baseParts.length === 0) {
+    return relativePath;
+  }
+
+  if (/^[a-zA-Z]:$/i.test(baseParts[0] ?? "")) {
+    const drive = baseParts.shift() ?? "";
+    return `${drive}${separator}${baseParts.join(separator)}`;
+  }
+
+  return baseParts.join(separator);
+}
+
+function formatMarkdownPath(path: string, documentPath: string | null): string {
+  let result = path.trim();
+  if (!result) {
+    return result;
+  }
+
+  if (documentPath && isAbsolutePath(result)) {
+    const relative = toRelativeImagePath(result, documentPath);
+    if (relative) {
+      result = relative;
+    }
+  }
+
+  return result.replace(/\\/g, "/");
 }
 
 export function resolveImagePath(src: string, documentPath: string | null): string {
@@ -45,7 +90,7 @@ export function resolveImagePath(src: string, documentPath: string | null): stri
     return trimmed;
   }
 
-  return joinPath(directory, trimmed);
+  return resolveRelativePath(trimmed, directory);
 }
 
 export function assetUrlToFilePath(src: string): string | null {
@@ -88,7 +133,7 @@ export function toRelativeImagePath(
   const relative = absolutePath
     .slice(directory.length)
     .replace(/^[\\/]+/, "");
-  return relative || null;
+  return relative ? formatMarkdownPath(relative, null) : null;
 }
 
 export function normalizeMarkdownImageSrc(
@@ -105,24 +150,23 @@ export function normalizeMarkdownImageSrc(
     !isAssetImageSrc(trimmedMarkdown) &&
     !isRemoteImageSrc(trimmedMarkdown)
   ) {
-    return trimmedMarkdown;
-  }
-
-  if (trimmedMarkdown && !isAssetImageSrc(trimmedMarkdown)) {
-    return trimmedMarkdown;
+    return formatMarkdownPath(trimmedMarkdown, documentPath);
   }
 
   const fromAsset = assetUrlToFilePath(trimmedDisplay);
   if (fromAsset) {
-    const relative = toRelativeImagePath(fromAsset, documentPath);
-    return relative ?? fromAsset;
+    return formatMarkdownPath(fromAsset, documentPath);
+  }
+
+  if (trimmedMarkdown && !isAssetImageSrc(trimmedMarkdown)) {
+    return formatMarkdownPath(trimmedMarkdown, documentPath);
   }
 
   if (trimmedMarkdown) {
-    return trimmedMarkdown;
+    return formatMarkdownPath(trimmedMarkdown, documentPath);
   }
 
-  return trimmedDisplay;
+  return formatMarkdownPath(trimmedDisplay, documentPath);
 }
 
 export function toDisplayImageSrc(
@@ -139,6 +183,10 @@ export function toDisplayImageSrc(
   }
 
   const resolved = resolveImagePath(trimmed, documentPath);
+  if (!documentPath && !isAbsolutePath(resolved)) {
+    return trimmed;
+  }
+
   if (isTauriRuntime()) {
     return convertFileSrc(resolved);
   }

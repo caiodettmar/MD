@@ -50,9 +50,8 @@ export function ToolbarIcon({ id, className }: ToolbarIconProps) {
     case "strike":
       return (
         <svg {...common}>
-          <path d="M17 4H7" />
-          <path d="M20 12H4" />
-          <path d="M14 20H10" />
+          <path d="M16 4H9a3 3 0 0 0-2.8 4 3 3 0 0 0 1.4 2.2A4 4 0 0 0 8 14.5 4 4 0 0 0 12 18h7" />
+          <path d="M4 12h16" />
         </svg>
       );
     case "highlight":
