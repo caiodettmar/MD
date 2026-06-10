@@ -12,6 +12,8 @@ pub struct AppConfig {
     pub show_raw_on_startup: bool,
     pub auto_save_ms: u32,
     pub check_updates: bool,
+    #[serde(default)]
+    pub recent_files: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -41,6 +43,7 @@ impl Default for AppConfig {
             show_raw_on_startup: false,
             auto_save_ms: 2000,
             check_updates: true,
+            recent_files: Vec::new(),
         }
     }
 }

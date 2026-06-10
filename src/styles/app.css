@@ -1080,4 +1080,174 @@
   .md-editor-surface table {
     break-inside: avoid;
   }
+
+  .find-bar {
+    display: none !important;
+  }
+}
+
+.settings-dialog {
+  width: min(92vw, 460px);
+  max-height: 84vh;
+  overflow-y: auto;
+}
+
+.settings-dialog__section {
+  margin: 1rem 0 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.settings-dialog__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 0;
+  font-size: 0.9rem;
+}
+
+.settings-dialog__row select,
+.settings-dialog__row input[type="number"] {
+  min-width: 130px;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--bg-muted);
+  color: var(--text);
+}
+
+.settings-dialog__row input[type="range"] {
+  width: 150px;
+}
+
+.settings-dialog__value {
+  color: var(--text-muted);
+}
+
+.settings-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.settings-dialog__actions button {
+  margin-top: 0;
+}
+
+.settings-dialog__actions .is-secondary {
+  background: var(--bg-muted);
+  color: var(--text);
+}
+
+.insert-dialog__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0.6rem 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.insert-dialog__field input {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--bg-muted);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.insert-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.insert-dialog__actions button {
+  margin-top: 0;
+}
+
+.insert-dialog__actions .is-secondary {
+  background: var(--bg-muted);
+  color: var(--text);
+}
+
+.insert-dialog__actions .is-danger {
+  margin-right: auto;
+  background: #dc2626;
+}
+
+.insert-dialog__actions button:disabled {
+  opacity: 0.5;
+}
+
+.find-bar {
+  position: fixed;
+  top: 52px;
+  right: 24px;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--bg-panel);
+  box-shadow: var(--shadow);
+}
+
+.find-bar__row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.find-bar__input {
+  width: 200px;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--bg-muted);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+.find-bar__count {
+  min-width: 42px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.find-bar__button {
+  min-width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 0.5rem;
+  background: var(--bg-muted);
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.find-bar__button:disabled {
+  opacity: 0.45;
+}
+
+.find-bar__button--wide {
+  padding: 0 0.6rem;
+}
+
+.find-match {
+  background: rgba(250, 204, 21, 0.45);
+  border-radius: 2px;
+}
+
+.find-match--current {
+  background: rgba(249, 115, 22, 0.6);
 }

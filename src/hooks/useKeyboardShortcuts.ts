@@ -14,6 +14,8 @@ export function useKeyboardShortcuts() {
   const resetZoom = useEditorStore((state) => state.resetZoom);
   const printActiveTab = useEditorStore((state) => state.printActiveTab);
   const getActiveEditor = useEditorStore((state) => state.getActiveEditor);
+  const setSettingsOpen = useEditorStore((state) => state.setSettingsOpen);
+  const openFindBar = useEditorStore((state) => state.openFindBar);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -92,6 +94,24 @@ export function useKeyboardShortcuts() {
         return;
       }
 
+      if (key === ",") {
+        event.preventDefault();
+        setSettingsOpen(true);
+        return;
+      }
+
+      if (key === "f" && !event.shiftKey) {
+        event.preventDefault();
+        openFindBar(false);
+        return;
+      }
+
+      if (key === "h" && !event.shiftKey) {
+        event.preventDefault();
+        openFindBar(true);
+        return;
+      }
+
       if (key === "/" || (key === "7" && event.shiftKey)) {
         event.preventDefault();
         toggleRawPane();
@@ -139,7 +159,9 @@ export function useKeyboardShortcuts() {
     cycleTab,
     getActiveEditor,
     openFileDialog,
+    openFindBar,
     printActiveTab,
+    setSettingsOpen,
     resetZoom,
     saveActiveTab,
     saveActiveTabAs,

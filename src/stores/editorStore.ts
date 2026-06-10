@@ -20,6 +20,8 @@ import {
   writeMarkdownFile,
 } from "../lib/tauri";
 
+const MAX_RECENT_FILES = 10;
+
 interface EditorStore {
   initialized: boolean;
   config: AppConfig;
@@ -27,8 +29,23 @@ interface EditorStore {
   activeTabId: string | null;
   showRawPane: boolean;
   showReferencesPanel: boolean;
+  settingsOpen: boolean;
+  updateCheckOpen: boolean;
+  imageDialogOpen: boolean;
+  findBarOpen: boolean;
+  findBarReplaceMode: boolean;
   editors: Record<string, Editor | null>;
   init: () => Promise<void>;
+  updateConfig: (partial: Partial<AppConfig>) => void;
+  resetConfig: () => void;
+  setSettingsOpen: (open: boolean) => void;
+  setUpdateCheckOpen: (open: boolean) => void;
+  setImageDialogOpen: (open: boolean) => void;
+  openFindBar: (replaceMode: boolean) => void;
+  closeFindBar: () => void;
+  addRecentFile: (path: string) => void;
+  clearRecentFiles: () => void;
+  openFileByPath: (path: string) => Promise<void>;
   setEditor: (tabId: string, editor: Editor | null) => void;
   getActiveEditor: () => Editor | null;
   createTab: (partial?: Partial<TabDocument>) => string;
@@ -103,6 +120,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   activeTabId: null,
   showRawPane: false,
   showReferencesPanel: false,
+  settingsOpen: false,
+  updateCheckOpen: false,
+  imageDialogOpen: false,
+  findBarOpen: false,
+  findBarReplaceMode: false,
   editors: {},
 
   init: async () => {
@@ -152,8 +174,118 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         activeTabId,
         showRawPane: config.showRawOnStartup,
       });
+      if (config.checkUpdates) {
+        // Startup update check stub: no network calls until a release
+        // endpoint exists (see docs/implementation-plan.md, Phase 5).
+        console.info("MD update check skipped (no release endpoint configured).");
+      }
     } catch (error) {
       console.error("Failed to initialize MD:", error);
+    }
+  },
+
+  updateConfig: (partial) => {
+    set((state) => ({
+      config: {
+        ...state.config,
+        ...partial,
+      },
+    }));
+    void get().persistConfig();
+  },
+
+  resetConfig: () => {
+    set((state) => ({
+      config: {
+        ...DEFAULT_CONFIG,
+        recentFiles: state.config.recentFiles,
+      },
+    }));
+    void get().persistConfig();
+  },
+
+  setSettingsOpen: (open) => {
+    set({ settingsOpen: open });
+  },
+
+  setUpdateCheckOpen: (open) => {
+    set({ updateCheckOpen: open });
+  },
+
+  setImageDialogOpen: (open) => {
+    set({ imageDialogOpen: open });
+  },
+
+  openFindBar: (replaceMode) => {
+    set({ findBarOpen: true, findBarReplaceMode: replaceMode });
+  },
+
+  closeFindBar: () => {
+    set({ findBarOpen: false });
+  },
+
+  addRecentFile: (path) => {
+    set((state) => {
+      const next = [
+        path,
+        ...state.config.recentFiles.filter((entry) => entry !== path),
+      ].slice(0, MAX_RECENT_FILES);
+      return {
+        config: {
+          ...state.config,
+          recentFiles: next,
+        },
+      };
+    });
+    void get().persistConfig();
+  },
+
+  clearRecentFiles: () => {
+    set((state) => ({
+      config: {
+        ...state.config,
+        recentFiles: [],
+      },
+    }));
+    void get().persistConfig();
+  },
+
+  openFileByPath: async (path) => {
+    try {
+      const file = await readMarkdownFile(path);
+      const existing = get().tabs.find((tab) => tab.path === file.path);
+      if (existing) {
+        set({ activeTabId: existing.id });
+        get().addRecentFile(file.path);
+        return;
+      }
+
+      const tab: TabDocument = {
+        id: uuidv4(),
+        path: file.path,
+        title: fileNameFromPath(file.path),
+        markdown: file.content,
+        dirty: false,
+        saveStatus: "saved",
+        lastSavedAt: new Date().toISOString(),
+      };
+
+      set((state) => ({
+        tabs: [...state.tabs, tab],
+        activeTabId: tab.id,
+      }));
+      get().addRecentFile(file.path);
+    } catch (error) {
+      console.error(`Failed to open ${path}:`, error);
+      set((state) => ({
+        config: {
+          ...state.config,
+          recentFiles: state.config.recentFiles.filter(
+            (entry) => entry !== path,
+          ),
+        },
+      }));
+      void get().persistConfig();
     }
   },
 
@@ -264,27 +396,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       return;
     }
 
-    const file = await readMarkdownFile(path);
-    const existing = get().tabs.find((tab) => tab.path === file.path);
-    if (existing) {
-      set({ activeTabId: existing.id });
-      return;
-    }
-
-    const tab: TabDocument = {
-      id: uuidv4(),
-      path: file.path,
-      title: fileNameFromPath(file.path),
-      markdown: file.content,
-      dirty: false,
-      saveStatus: "saved",
-      lastSavedAt: new Date().toISOString(),
-    };
-
-    set((state) => ({
-      tabs: [...state.tabs, tab],
-      activeTabId: tab.id,
-    }));
+    await get().openFileByPath(path);
   },
 
   saveActiveTab: async () => {
@@ -327,9 +439,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
                 saveStatus: "saved" as SaveStatus,
                 lastSavedAt: result.savedAt,
               }
-            : entry,
+              : entry,
         ),
       }));
+      get().addRecentFile(result.path);
       await get().persistSession();
       return true;
     } catch {
@@ -376,6 +489,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
             : entry,
         ),
       }));
+      get().addRecentFile(result.path);
       await get().persistSession();
       return true;
     } catch {

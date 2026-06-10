@@ -3,13 +3,18 @@ import type { Editor } from "@tiptap/react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { MdEditor } from "../editor/MdEditor";
 import { useEditorStore } from "../stores/editorStore";
+import { fileNameFromPath } from "../types";
 import { AboutDialog } from "./AboutDialog";
-import { exitApplication, type MenuSection } from "./AppMenu";
+import { exitApplication, type MenuItem, type MenuSection } from "./AppMenu";
 import { EmptyState } from "./EmptyState";
+import { FindReplaceBar } from "./FindReplaceBar";
+import { ImageInsertDialog } from "./ImageInsertDialog";
 import { RawPane } from "./RawPane";
 import { ReferenceDefinitionsPanel } from "./ReferenceDefinitionsPanel";
+import { SettingsDialog } from "./SettingsDialog";
 import { StatusBar } from "./StatusBar";
 import { TabBar } from "./TabBar";
+import { UpdateCheckDialog } from "./UpdateCheckDialog";
 
 export function AppShell() {
   const initialized = useEditorStore((state) => state.initialized);
@@ -42,6 +47,17 @@ export function AppShell() {
   const getActiveEditor = useEditorStore((state) => state.getActiveEditor);
   const printActiveTab = useEditorStore((state) => state.printActiveTab);
   const persistSession = useEditorStore((state) => state.persistSession);
+  const settingsOpen = useEditorStore((state) => state.settingsOpen);
+  const setSettingsOpen = useEditorStore((state) => state.setSettingsOpen);
+  const updateCheckOpen = useEditorStore((state) => state.updateCheckOpen);
+  const setUpdateCheckOpen = useEditorStore((state) => state.setUpdateCheckOpen);
+  const imageDialogOpen = useEditorStore((state) => state.imageDialogOpen);
+  const setImageDialogOpen = useEditorStore((state) => state.setImageDialogOpen);
+  const findBarOpen = useEditorStore((state) => state.findBarOpen);
+  const openFindBar = useEditorStore((state) => state.openFindBar);
+  const recentFiles = useEditorStore((state) => state.config.recentFiles);
+  const openFileByPath = useEditorStore((state) => state.openFileByPath);
+  const clearRecentFiles = useEditorStore((state) => state.clearRecentFiles);
 
   const [aboutOpen, setAboutOpen] = useState(false);
 
@@ -56,6 +72,32 @@ export function AppShell() {
     },
     [setEditor],
   );
+
+  const recentFileItems: MenuItem[] = useMemo(() => {
+    if (recentFiles.length === 0) {
+      return [];
+    }
+
+    const items: MenuItem[] = recentFiles.map((path, index) => ({
+      id: `recent-${index}`,
+      label: `${index + 1}. ${fileNameFromPath(path)}`,
+      onSelect: () => void openFileByPath(path),
+    }));
+
+    items.push({
+      id: "recent-clear",
+      label: "Clear Recent Files",
+      onSelect: () => clearRecentFiles(),
+    });
+    items.push({
+      id: "sep-recent",
+      label: "",
+      separator: true,
+      onSelect: () => {},
+    });
+
+    return items;
+  }, [clearRecentFiles, openFileByPath, recentFiles]);
 
   const menuSections: MenuSection[] = useMemo(
     () => [
@@ -76,6 +118,7 @@ export function AppShell() {
             onSelect: () => void openFileDialog(),
           },
           { id: "sep-1", label: "", separator: true, onSelect: () => {} },
+          ...recentFileItems,
           {
             id: "save",
             label: "Save",
@@ -96,6 +139,13 @@ export function AppShell() {
             onSelect: () => printActiveTab(),
           },
           { id: "sep-3", label: "", separator: true, onSelect: () => {} },
+          {
+            id: "settings",
+            label: "Settings…",
+            shortcut: "Ctrl+,",
+            onSelect: () => setSettingsOpen(true),
+          },
+          { id: "sep-4", label: "", separator: true, onSelect: () => {} },
           {
             id: "exit",
             label: "Exit",
@@ -123,6 +173,19 @@ export function AppShell() {
             onSelect: () => {
               getActiveEditor()?.chain().focus().redo().run();
             },
+          },
+          { id: "sep-edit-1", label: "", separator: true, onSelect: () => {} },
+          {
+            id: "find",
+            label: "Find",
+            shortcut: "Ctrl+F",
+            onSelect: () => openFindBar(false),
+          },
+          {
+            id: "replace",
+            label: "Replace",
+            shortcut: "Ctrl+H",
+            onSelect: () => openFindBar(true),
           },
         ],
       },
@@ -156,6 +219,11 @@ export function AppShell() {
         label: "Help",
         items: [
           {
+            id: "check-updates",
+            label: "Check for Updates…",
+            onSelect: () => setUpdateCheckOpen(true),
+          },
+          {
             id: "about",
             label: "About MD",
             onSelect: () => setAboutOpen(true),
@@ -167,10 +235,14 @@ export function AppShell() {
       createTab,
       getActiveEditor,
       openFileDialog,
+      openFindBar,
       printActiveTab,
+      recentFileItems,
       resetZoom,
       saveActiveTab,
       saveActiveTabAs,
+      setSettingsOpen,
+      setUpdateCheckOpen,
       showRawPane,
       showReferencesPanel,
       toggleRawPane,
@@ -293,8 +365,25 @@ export function AppShell() {
         onToggle={toggleReferencesPanel}
       />
 
+      {findBarOpen && activeEditor ? (
+        <FindReplaceBar key={activeTabId ?? "none"} editor={activeEditor} />
+      ) : null}
+
       <StatusBar tab={activeTab} config={config} showRawPane={showRawPane} />
       <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
+      <SettingsDialog
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
+      <UpdateCheckDialog
+        open={updateCheckOpen}
+        onClose={() => setUpdateCheckOpen(false)}
+      />
+      <ImageInsertDialog
+        open={imageDialogOpen}
+        editor={activeEditor}
+        onClose={() => setImageDialogOpen(false)}
+      />
     </div>
   );
 }

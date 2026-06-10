@@ -12,6 +12,7 @@ export interface AppConfig {
   showRawOnStartup: boolean;
   autoSaveMs: number;
   checkUpdates: boolean;
+  recentFiles: string[];
 }
 
 export interface TabDocument {
@@ -57,6 +58,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   showRawOnStartup: false,
   autoSaveMs: 2000,
   checkUpdates: true,
+  recentFiles: [],
 };
 
 export function fileNameFromPath(path: string): string {
