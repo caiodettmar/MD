@@ -1,4 +1,5 @@
 import { Extension, InputRule } from "@tiptap/core";
+import { createDefinitionListInputRule } from "./definitionListExtension";
 
 /**
  * Typora-like block triggers: markdown markers disappear after typing the
@@ -135,6 +136,16 @@ export const InlineBlockTriggers = Extension.create({
           }
         },
       }),
+      new InputRule({
+        find: /^\|\s$/,
+        handler: ({ chain, range }) => {
+          chain()
+            .deleteRange({ from: range.from, to: range.to })
+            .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+            .run();
+        },
+      }),
+      createDefinitionListInputRule(),
     ];
   },
 });

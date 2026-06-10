@@ -11,8 +11,11 @@ import {
 import { createPortal } from "react-dom";
 import type { Editor } from "@tiptap/react";
 import { EMOJI_PRESETS } from "../editor/constants/emojiPresets";
+import { insertDefaultTable } from "../editor/blockCommands";
+import { insertDefinitionList } from "../editor/definitionListExtension";
 import { isInsideLinkReferenceDefinition } from "../editor/linkReferenceDefinitionUtils";
 import { markRegistry } from "../editor/markRegistry";
+import { scoreSlashMatch } from "../editor/slashMenuUtils";
 import { useEditorStore } from "../stores/editorStore";
 
 interface SlashMenuProps {
@@ -94,12 +97,14 @@ const blockItems = [
     label: "Table",
     hint: "3×3",
     keywords: ["table", "grid"],
-    run: (e: Editor) =>
-      e
-        .chain()
-        .focus()
-        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-        .run(),
+    run: (e: Editor) => insertDefaultTable(e),
+  },
+  {
+    id: "block-definition-list",
+    label: "Definition list",
+    hint: "dl",
+    keywords: ["definition", "deflist", "dl", "term"],
+    run: (e: Editor) => insertDefinitionList(e),
   },
   {
     id: "block-image",
@@ -126,19 +131,10 @@ function matchesSlashQuery(
   label: string,
   keywords: string[],
 ): boolean {
-  if (!query) {
-    return true;
-  }
-
-  const normalizedLabel = label.toLowerCase();
-  if (normalizedLabel.startsWith(query)) {
-    return true;
-  }
-
-  return keywords.some(
-    (keyword) => keyword.startsWith(query) || query.startsWith(keyword),
-  );
+  return scoreSlashMatch(query, label, keywords) >= 0;
 }
+
+export { scoreSlashMatch };
 
 export function slashQuery(editor: Editor): string | null {
   return slashQueryFromState(editor.state);
@@ -314,11 +310,15 @@ export function SlashMenu({ editor }: SlashMenuProps) {
 
     const menuItems: SlashMenuItem[] = [];
 
-    const marks = markRegistry.filter((entry) =>
-      matchesSlashQuery(filterQuery, entry.label, entry.slashKeywords),
-    );
+    const marks = markRegistry
+      .map((entry) => ({
+        entry,
+        score: scoreSlashMatch(filterQuery, entry.label, entry.slashKeywords),
+      }))
+      .filter(({ score }) => score >= 0)
+      .sort((left, right) => right.score - left.score);
 
-    marks.forEach((entry, index) => {
+    marks.forEach(({ entry }, index) => {
       menuItems.push({
         key: `mark-${entry.id}`,
         section: index === 0 ? "Formatting" : undefined,
@@ -336,11 +336,15 @@ export function SlashMenu({ editor }: SlashMenuProps) {
       });
     });
 
-    const blocks = blockItems.filter((entry) =>
-      matchesSlashQuery(filterQuery, entry.label, entry.keywords),
-    );
+    const blocks = blockItems
+      .map((entry) => ({
+        entry,
+        score: scoreSlashMatch(filterQuery, entry.label, entry.keywords),
+      }))
+      .filter(({ score }) => score >= 0)
+      .sort((left, right) => right.score - left.score);
 
-    blocks.forEach((entry, index) => {
+    blocks.forEach(({ entry }, index) => {
       menuItems.push({
         key: entry.id,
         section: index === 0 ? "Blocks" : undefined,

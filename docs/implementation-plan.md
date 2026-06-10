@@ -180,15 +180,17 @@ Target coverage aligned with [Basic](https://www.markdownguide.org/basic-syntax/
 
 #### Completed
 
-1. **Block UX** — Slash menu "Table" (3×3 with header row), "Image" (`ImageInsertDialog.tsx`), and "Link" (`LinkInsertDialog.tsx`); ` ```lang ` line-start trigger in `inlineBlockTriggers.ts`
-2. **Inline UX** — Subscript/superscript in `markRegistry` (slash menu + selection toolbar); `^` superscript input rule with footnote (`[^`) guard; highlight color swatches + remove-highlight in the bubble menu, with `MarkdownHighlight` serializing colored highlights as `<mark style>` and default as `==…==`
+1. **Block UX** — Slash menu "Table" (3×3 with header row), "Image" (`ImageInsertDialog.tsx`), "Definition list", and "Link" (`LinkInsertDialog.tsx`); ` ```lang `, `| `, and `: ` line-start triggers in `inlineBlockTriggers.ts` / `definitionListExtension.ts`
+2. **Inline UX** — Subscript/superscript in `markRegistry` (slash menu + selection toolbar); `^` superscript and guarded `~` subscript input rules; highlight color swatches + remove-highlight in the bubble menu, with `MarkdownHighlight` serializing colored highlights as `<mark style>` and default as `==…==`
 3. **Link UX** — Bubble menu and slash menu link dialogs (`LinkEditDialog.tsx` / `LinkInsertDialog.tsx`) to add/update/remove links with optional title
 4. **Hard breaks** — Shift+Enter `<br>` via StarterKit HardBreak; `@tiptap/markdown` serializes as backslash break
+5. **Selection toolbar blocks** — Heading H1–H3 popover, bullet/ordered/task lists, blockquote, and remove-formatting eraser
+6. **Slash filter** — Scored matching in `slashMenuUtils.ts` (e.g. `/img` ranks Image above Italic)
+7. **Image markdown trigger** — `![alt](url)` input rules in `markdownImage.ts`
 
 #### Deferred / out of scope
 
-- `~` subscript input rule — conflicts with `~~` strikethrough; subscript stays slash/toolbar only
-- Definition lists, image paste/drag-drop, markdown line-start table trigger
+- Image paste/drag-drop, markdown indent hacks
 - Escaping and raw HTML blocks — explicitly out of scope for now
 - Emoji shortcode round-trip (`emojiSaveMode: "shortcode"`) — config only
 

@@ -531,6 +531,28 @@
   color: var(--text-muted);
 }
 
+.md-editor-surface .md-definition-list {
+  margin: 1rem 0;
+}
+
+.md-editor-surface .md-dt {
+  margin: 0.75rem 0 0.25rem;
+  font-weight: 700;
+}
+
+.md-editor-surface .md-dd {
+  margin: 0 0 0.75rem 1.25rem;
+  color: var(--text);
+}
+
+.md-editor-surface .md-dd > :first-child {
+  margin-top: 0;
+}
+
+.md-editor-surface .md-dd > :last-child {
+  margin-bottom: 0;
+}
+
 .md-editor-surface code {
   padding: 0.15rem 0.35rem;
   border-radius: 0.35rem;

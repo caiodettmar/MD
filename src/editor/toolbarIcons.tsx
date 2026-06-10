@@ -12,7 +12,13 @@ export type ToolbarIconId =
   | "link"
   | "linkRemove"
   | "textColor"
-  | "highlightColor";
+  | "highlightColor"
+  | "clearFormatting"
+  | "heading"
+  | "bulletList"
+  | "orderedList"
+  | "taskList"
+  | "blockquote";
 
 interface ToolbarIconProps {
   id: ToolbarIconId;
@@ -122,6 +128,62 @@ export function ToolbarIcon({ id, className }: ToolbarIconProps) {
           <path d="M20 4l-4 4" />
           <path d="M14 10l4-4" />
           <rect x="3" y="18" width="18" height="3" rx="1" fill="currentColor" stroke="none" />
+        </svg>
+      );
+    case "clearFormatting":
+      return (
+        <svg {...common}>
+          <path d="M18 4l2 2" />
+          <path d="M14.5 7.5L19 3" />
+          <path d="M3 21l8.5-8.5" />
+          <path d="M9 11l-6 6v3h3l6-6" />
+        </svg>
+      );
+    case "heading":
+      return (
+        <svg {...common}>
+          <path d="M6 4v16" />
+          <path d="M18 4v16" />
+          <path d="M6 12h12" />
+        </svg>
+      );
+    case "bulletList":
+      return (
+        <svg {...common}>
+          <line x1="9" y1="6" x2="20" y2="6" />
+          <line x1="9" y1="12" x2="20" y2="12" />
+          <line x1="9" y1="18" x2="20" y2="18" />
+          <circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none" />
+          <circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none" />
+          <circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none" />
+        </svg>
+      );
+    case "orderedList":
+      return (
+        <svg {...common}>
+          <line x1="10" y1="6" x2="20" y2="6" />
+          <line x1="10" y1="12" x2="20" y2="12" />
+          <line x1="10" y1="18" x2="20" y2="18" />
+          <path d="M4 6h1.5L4 8.5V6z" fill="currentColor" stroke="none" />
+          <path d="M4 11h2v1H4v2h2" />
+          <path d="M4 17h2a1 1 0 1 0 0-2H4v2z" />
+        </svg>
+      );
+    case "taskList":
+      return (
+        <svg {...common}>
+          <rect x="3" y="5" width="6" height="6" rx="1" />
+          <path d="M5 8l1.5 1.5L9 7" />
+          <line x1="12" y1="8" x2="20" y2="8" />
+          <rect x="3" y="13" width="6" height="6" rx="1" />
+          <line x1="12" y1="16" x2="20" y2="16" />
+        </svg>
+      );
+    case "blockquote":
+      return (
+        <svg {...common}>
+          <path d="M7 7h3v8H7z" />
+          <path d="M14 7h3v8h-3z" />
         </svg>
       );
     default:

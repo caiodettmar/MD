@@ -41,11 +41,12 @@ npm run tauri:build
 
 ## Phase 6 (mostly complete)
 
-- Slash menu: Table (3x3 + header) and Image (URL + alt dialog) inserts
-- Selection toolbar: highlight color swatches + remove, inline link add/edit/remove with optional title
-- Superscript `^` delimiter (with footnote guard); subscript via slash/toolbar (`~` conflicts with strikethrough)
+- Slash menu: Table (3×3 + header), Image (URL + alt dialog), Definition list, and Link inserts; smarter filter ranking (`img` → Image before Italic)
+- Line-start triggers: `| ` inserts table; `![alt](url)` inserts image; `: ` after a term line builds definition list
+- Selection toolbar: highlight color swatches + remove, inline link add/edit/remove, remove formatting, H1–H3 heading popover, bullet/ordered/task lists, blockquote
+- Superscript `^` delimiter (with footnote guard); subscript `~` delimiter (guarded against `~~` strikethrough)
 
-Out of scope for now: definition lists, image drag-drop, escaping, raw HTML blocks.
+Out of scope for now: image drag-drop, escaping, raw HTML blocks, indent hacks.
 
 ## Storage
 

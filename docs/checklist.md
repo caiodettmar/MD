@@ -63,7 +63,7 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Multi-color highlight | Selection toolbar swatches | Colored highlight serializes as `<mark style>` via `MarkdownHighlight`; default stays `==…==` |
 | ✅ | Emoji shortcode | `:name:` | gemoji lookup |
 | 🟡 | Emoji save mode | `config.emojiSaveMode` | Config stored; serialization not differentiated |
-| ✅ | Subscript typing | Slash menu / toolbar | Raw pane serializes as `<sub>…</sub>`; `~` input rule deferred (conflicts with `~~` strikethrough) |
+| ✅ | Subscript typing | `~` (guarded) / slash / toolbar | Raw pane serializes as `<sub>…</sub>`; single `~` disambiguated from `~~` strikethrough |
 | ✅ | Superscript typing | `^` | Input rule with footnote (`[^`) guard; raw pane serializes as `<sup>…</sup>`; also slash menu / toolbar |
 
 ---
@@ -80,10 +80,10 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Horizontal rule | `---` at line start | |
 | ✅ | Fenced code block | Slash menu / TipTap | Shiki highlighting |
 | ✅ | Fenced code + language | ` ```lang ` at line start | `inlineBlockTriggers.ts` |
-| ✅ | Tables | Slash menu "Table" (3x3 + header) | WYSIWYG borders + resizable columns; no markdown line-start trigger |
-| ✅ | Images | Slash menu "Image" → URL/path dialog + local file picker (Tauri) | Relative paths resolve via doc directory; `resolveRelativePath` fixes `./` joins; markdown stores forward-slash relative paths |
+| ✅ | Tables | `\| ` at line start / slash menu | 3×3 with header row; WYSIWYG borders + resizable columns |
+| ✅ | Images | `![alt](url)` input rule / slash menu | URL/path dialog + local file picker (Tauri); relative paths via doc directory |
 | ✅ | Raw HTML images | `<img>` / `<picture>` in raw pane | Parsed into image nodes; round-trip via markdown or HTML with `data-md-src` |
-| ⬜ | Definition lists | — | Not implemented |
+| ✅ | Definition lists | Slash menu / `: ` line-start | WYSIWYG `<dl>` styling; raw pane serializes as `<dl><dt><dd>` HTML |
 | ✅ | Paragraphs | Default | |
 
 ---
@@ -93,13 +93,14 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | Status | Item | Notes |
 |--------|------|-------|
 | ✅ | Opens at cursor | Fixed positioning (no off-screen / spurious newline) |
-| ✅ | Filter as you type | Prefix matching |
+| ✅ | Filter as you type | Scored prefix/keyword matching (`slashMenuUtils.ts`) |
 | ✅ | Keyboard navigation | ↑↓ Enter Esc |
 | ✅ | Formatting section | From `markRegistry` |
 | ✅ | Blocks section | Headings, lists, quote, code, HR |
 | ✅ | Emoji submenu | Preset grid |
 | ✅ | Table insert | 3x3 with header row |
 | ✅ | Image insert | URL + alt dialog (`ImageInsertDialog.tsx`) |
+| ✅ | Definition list insert | Slash menu "Definition list" |
 | ✅ | Link insert | Opens `LinkInsertDialog` (selection or URL at cursor) |
 
 ---
@@ -112,7 +113,8 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Bold / italic / strike / highlight / underline / code | Via `markRegistry` | SVG icons + tooltips |
 | ✅ | Text color swatches | Popover in selection toolbar | Presets, custom color input, reset |
 | ✅ | Highlight color swatches | Popover in selection toolbar | Presets, custom color input, clear highlight |
-| ⬜ | Heading / list / quote actions | Spec mentioned Word-like bar; not implemented |
+| ✅ | Heading / list / quote actions | H1–H3 popover, bullet/ordered/task, blockquote icons |
+| ✅ | Remove formatting | Eraser icon → `unsetAllMarks().clearNodes()` |
 | ✅ | Link edit / remove | Link + unlink icons → `LinkEditDialog` (add/update/remove, optional title) |
 | ✅ | Selection toolbar overflow | Single-row toolbar with horizontal scroll; strikethrough icon fixed |
 
@@ -158,8 +160,8 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Colored text in raw pane | HTML span serialization |
 | ✅ | Subscript / superscript in raw pane | `<sub>` / `<sup>` HTML serialization; round-trip via markdown HTML parse |
 | 🟡 | Markdown Guide — basic syntax | Covered incl. images/links and raw `<img>` HTML fallback; escaping + raw HTML blocks out of scope |
-| 🟡 | Markdown Guide — extended syntax | Tables, tasks, strike, highlight, footnotes, sub/sup covered; definition lists missing |
-| 🟡 | Markdown Guide — hacks | Underline, sub/sup done; definition lists, indent tricks not planned |
+| ✅ | Markdown Guide — extended syntax | Tables, tasks, strike, highlight, footnotes, sub/sup, definition lists |
+| 🟡 | Markdown Guide — hacks | Underline, sub/sup done; indent tricks not planned |
 | ⬜ | Emoji shortcode round-trip option | `emojiSaveMode: "shortcode"` not enforced |
 
 ---
@@ -229,8 +231,7 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 1. **Auto-updater** — tauri-plugin-updater + signing keypair + release endpoint; required for v1 release story.
 2. **Automated round-trip tests** — Lock in reference-definition, footnote, and highlight serialization behavior.
 3. **Installer QA** — Smoke-test NSIS per-user/per-machine modes and portable bundle.
-4. **Subscript `~` input rule** — Revisit disambiguation against `~~` strikethrough (currently slash/toolbar only).
-5. **Definition lists & remaining Markdown Guide hacks** — Lowest priority parity gaps.
+4. **Definition lists & remaining Markdown Guide hacks** — Indent tricks remain lowest priority.
 
 ---
 
@@ -243,4 +244,4 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | 3 | Colors, emoji, Shiki, paste, polish | ✅ Complete |
 | 4 | Links, refs, footnotes, print, stability | ✅ Complete (Settings UI & auto-update moved to Phase 5) |
 | 5 | Settings, updates, release QA | 🟡 In progress (Settings UI, find/replace, recent files done; auto-updater & installer QA remain) |
-| 6 | Markdown Guide parity | 🟡 In progress (table/image/link slash, sub/sup, highlight colors, fenced lang; definition lists & hacks remain) |
+| 6 | Markdown Guide parity | 🟡 In progress (definition lists, line-start triggers, toolbar blocks, subscript `~`; indent hacks remain) |

@@ -1,5 +1,5 @@
 import Image from "@tiptap/extension-image";
-import type { Editor } from "@tiptap/core";
+import { InputRule, type Editor } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import {
   buildImageNodeAttrs,
@@ -158,6 +158,41 @@ export function createMarkdownImage(getDocumentPath: () => string | null) {
 
     addProseMirrorPlugins() {
       return [createImageRefreshPlugin(getDocumentPath)];
+    },
+
+    addInputRules() {
+      const imageType = this.type;
+      const documentPath = getDocumentPath;
+
+      const insertImageFromMatch = (
+        state: Parameters<InputRule["handler"]>[0]["state"],
+        range: { from: number; to: number },
+        alt: string,
+        url: string,
+      ) => {
+        if (!imageType) {
+          return null;
+        }
+
+        const attrs = buildImageNodeAttrs(url, documentPath(), { alt });
+        const imageNode = imageType.create(attrs);
+        state.tr.replaceWith(range.from, range.to, imageNode);
+      };
+
+      return [
+        new InputRule({
+          find: /^!\[([^\]]*)\]\(([^)]+)\)$/,
+          handler: ({ state, range, match }) => {
+            insertImageFromMatch(state, range, match[1] ?? "", match[2] ?? "");
+          },
+        }),
+        new InputRule({
+          find: /!\[([^\]]*)\]\(([^)]+)\)$/,
+          handler: ({ state, range, match }) => {
+            insertImageFromMatch(state, range, match[1] ?? "", match[2] ?? "");
+          },
+        }),
+      ];
     },
   });
 }

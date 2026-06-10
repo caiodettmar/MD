@@ -1,4 +1,5 @@
 import type { Editor } from "@tiptap/react";
+import { scoreSlashMatch } from "./slashMenuUtils";
 
 export type MarkCommand = (editor: Editor) => boolean;
 
@@ -59,7 +60,7 @@ export const markRegistry: MarkRegistryEntry[] = [
   {
     id: "subscript",
     label: "Subscript",
-    shortcutLabel: "x₂",
+    shortcutLabel: "~",
     slashKeywords: ["sub", "subscript"],
     run: (editor) => editor.chain().focus().toggleSubscript().run(),
   },
@@ -78,9 +79,12 @@ export function findRegistryEntry(query: string): MarkRegistryEntry[] {
     return markRegistry;
   }
 
-  return markRegistry.filter(
-    (entry) =>
-      entry.label.toLowerCase().includes(normalized) ||
-      entry.slashKeywords.some((keyword) => keyword.startsWith(normalized)),
-  );
+  return markRegistry
+    .map((entry) => ({
+      entry,
+      score: scoreSlashMatch(normalized, entry.label, entry.slashKeywords),
+    }))
+    .filter(({ score }) => score >= 0)
+    .sort((left, right) => right.score - left.score)
+    .map(({ entry }) => entry);
 }

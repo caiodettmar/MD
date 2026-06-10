@@ -40,10 +40,28 @@ export const MarkdownDelimiterMarks = Extension.create({
       toggleStoredMarkRule("strike", "~~"),
       toggleStoredMarkRule("highlight", "=="),
       toggleStoredMarkRule("code", "`"),
+      new InputRule({
+        find: /(?<!~)~(?!~)$/,
+        handler: ({ state, range }) => {
+          const markType = state.schema.marks.subscript;
+          if (!markType) {
+            return null;
+          }
+
+          const { tr } = state;
+          tr.delete(range.from, range.to);
+
+          const activeMarks =
+            state.storedMarks ?? state.selection.$from.marks();
+          if (markType.isInSet(activeMarks)) {
+            tr.removeStoredMark(markType);
+          } else {
+            tr.addStoredMark(markType.create());
+          }
+        },
+      }),
       // Superscript via ^ delimiter. Guarded so typing footnote syntax [^id]
-      // does not toggle superscript. Subscript has no input rule: a single ~
-      // cannot be disambiguated from the ~~ strikethrough delimiter, so it is
-      // exposed through the slash menu and selection toolbar instead.
+      // does not toggle superscript.
       new InputRule({
         find: /\^$/,
         handler: ({ state, range }) => {

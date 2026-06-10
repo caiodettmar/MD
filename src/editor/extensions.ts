@@ -29,6 +29,11 @@ import { MarkdownHighlight } from "./markdownHighlight";
 import { MarkdownSubscript } from "./markdownSubscript";
 import { MarkdownSuperscript } from "./markdownSuperscript";
 import { MarkdownTextStyle } from "./markdownTextStyle";
+import {
+  DefinitionDescription,
+  DefinitionList,
+  DefinitionTerm,
+} from "./definitionListExtension";
 import { ShikiCodeBlock } from "./shikiCodeBlockExtension";
 
 const NoInputBold = Bold.extend({ addInputRules: () => [] });
@@ -98,6 +103,9 @@ export function createEditorExtensions(
         class: "md-task-item",
       },
     }),
+    DefinitionList,
+    DefinitionTerm,
+    DefinitionDescription,
     Table.configure({
       resizable: true,
     }),
