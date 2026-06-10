@@ -138,7 +138,7 @@ Advanced Markdown features and safer link handling.
   - **Edit references** side panel for CRUD on completed definitions
   - Reorder + cursor restore on confirm (position-safe, no full-doc cursor jump)
 - **Footnotes** — `[^id]` references and `[^id]:` multiline definitions
-- **Print** — Basic print preview via `window.open` + HTML export
+- **Print** — Hidden iframe print with inline stylesheet (`src/lib/printDocument.ts`); avoids `window.open` (null/blocked in Tauri WebView); `@media print` fallback when no editor is mounted
 - **Slash menu fixes** — Positioning, duplicate entries, keyboard navigation performance
 - **Editor stability** — OOM/infinite reorder loop fixed; instrumentation removed
 - **External link visual indicator** — CSS-only superscript ↗ on `http(s)` links (`app.css`); no schema or serialization impact; internal/anchor links unaffected
@@ -156,31 +156,41 @@ Advanced Markdown features and safer link handling.
 
 ---
 
-### Phase 5 — Settings, updates, and release (planned)
+### Phase 5 — Settings, updates, and release (in progress)
 
 Ship-quality desktop product.
 
-- Preferences dialog wired to `AppConfig` (theme, session restore, zoom default, wrap, emoji save mode, raw pane on startup, update checks)
-- Tauri updater plugin + release channel; manual download fallback
-- Installer smoke tests (per-user + per-machine NSIS modes)
-- Portable bundle documentation and `portable.flag` template
-- Find/replace, recent files, optional quality-of-life features
+#### Completed
+
+- **Settings dialog** (`SettingsDialog.tsx`) — exposes all `AppConfig` fields (session restore, theme, font size, word wrap, editor zoom, emoji save mode, raw pane on startup, auto-save interval, update checks); changes apply immediately via `updateConfig` and persist to `config.json`; Reset to defaults button; File menu entry + `Ctrl+,`
+- **Update check stub** — Help → "Check for Updates…" opens `UpdateCheckDialog.tsx` (current version + View releases link via opener plugin); startup check honors `config.checkUpdates` as a logging no-op until a release endpoint exists
+- **Recent files** — last 10 opened/saved paths in `config.recentFiles` (TS `AppConfig` + Rust struct with `#[serde(default)]`); File > Open Recent items + Clear Recent
+- **Find/replace** (`FindReplaceBar.tsx`) — `Ctrl+F` find / `Ctrl+H` replace over the active editor; ProseMirror decoration highlights, match count, next/prev (Enter/Shift+Enter), replace one/all, Escape closes
+
+#### Deferred (release engineering)
+
+- Full auto-update requires `tauri-plugin-updater`, a signing keypair, and a release endpoint — out of scope without a remote/release server
+- Installer smoke tests (per-user + per-machine NSIS modes) and portable bundle docs remain manual QA tasks
 
 ---
 
-### Phase 6 — Markdown Guide parity (planned)
+### Phase 6 — Markdown Guide parity (in progress)
 
 Target coverage aligned with [Basic](https://www.markdownguide.org/basic-syntax/), [Extended](https://www.markdownguide.org/extended-syntax/), and [Hacks](https://www.markdownguide.org/hacks/) syntax.
 
-Organized as incremental deliverables:
+#### Completed
 
-1. **Block UX** — Slash menu + line-start rules for tables, images, definition lists
-2. **Inline UX** — Subscript/superscript delimiters; multi-color highlight picker
-3. **Link UX** — Inline link editor in bubble menu; title attribute; external indicator styling
-4. **Media** — Image insert (URL dialog, paste, drag-drop); alt text editing
-5. **Edge cases** — Escaping, hard/soft breaks, HTML blocks where GFM allows
+1. **Block UX** — Slash menu "Table" (3×3 with header row), "Image" (`ImageInsertDialog.tsx`), and "Link" (`LinkInsertDialog.tsx`); ` ```lang ` line-start trigger in `inlineBlockTriggers.ts`
+2. **Inline UX** — Subscript/superscript in `markRegistry` (slash menu + selection toolbar); `^` superscript input rule with footnote (`[^`) guard; highlight color swatches + remove-highlight in the bubble menu, with `MarkdownHighlight` serializing colored highlights as `<mark style>` and default as `==…==`
+3. **Link UX** — Bubble menu and slash menu link dialogs (`LinkEditDialog.tsx` / `LinkInsertDialog.tsx`) to add/update/remove links with optional title
+4. **Hard breaks** — Shift+Enter `<br>` via StarterKit HardBreak; `@tiptap/markdown` serializes as backslash break
 
-Each item needs: input rule or command → WYSIWYG rendering → Markdown serialize → raw pane round-trip test.
+#### Deferred / out of scope
+
+- `~` subscript input rule — conflicts with `~~` strikethrough; subscript stays slash/toolbar only
+- Definition lists, image paste/drag-drop, markdown line-start table trigger
+- Escaping and raw HTML blocks — explicitly out of scope for now
+- Emoji shortcode round-trip (`emojiSaveMode: "shortcode"`) — config only
 
 ## Reference definition flow (current)
 
@@ -256,7 +266,7 @@ npx tsc --noEmit       # Typecheck
 
 - [ ] All Phase 1–3 items stable on Windows 10/11
 - [ ] Phase 4 link/reference/footnote flows complete without cursor or OOM regressions
-- [ ] Settings UI exposes all `AppConfig` fields
-- [ ] Auto-update or documented manual update path
-- [ ] Markdown Guide checklist at ≥90% for writer-facing syntax
+- [x] Settings UI exposes all `AppConfig` fields
+- [x] Auto-update or documented manual update path (manual check dialog; full updater is a release-engineering follow-up)
+- [x] Markdown Guide checklist at ≥90% for writer-facing syntax (definition lists, escaping, HTML blocks excluded)
 - [ ] Installer + portable mode verified on clean machines

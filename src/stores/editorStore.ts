@@ -10,6 +10,10 @@ import {
   type TabDocument,
 } from "../types";
 import {
+  printCurrentWindow,
+  printHtmlDocument,
+} from "../lib/printDocument";
+import {
   loadConfig,
   loadSession,
   pickOpenMarkdownPath,
@@ -32,6 +36,7 @@ interface EditorStore {
   settingsOpen: boolean;
   updateCheckOpen: boolean;
   imageDialogOpen: boolean;
+  linkDialogOpen: boolean;
   findBarOpen: boolean;
   findBarReplaceMode: boolean;
   editors: Record<string, Editor | null>;
@@ -41,6 +46,7 @@ interface EditorStore {
   setSettingsOpen: (open: boolean) => void;
   setUpdateCheckOpen: (open: boolean) => void;
   setImageDialogOpen: (open: boolean) => void;
+  setLinkDialogOpen: (open: boolean) => void;
   openFindBar: (replaceMode: boolean) => void;
   closeFindBar: () => void;
   addRecentFile: (path: string) => void;
@@ -123,6 +129,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   settingsOpen: false,
   updateCheckOpen: false,
   imageDialogOpen: false,
+  linkDialogOpen: false,
   findBarOpen: false,
   findBarReplaceMode: false,
   editors: {},
@@ -214,6 +221,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   setImageDialogOpen: (open) => {
     set({ imageDialogOpen: open });
+  },
+
+  setLinkDialogOpen: (open) => {
+    set({ linkDialogOpen: open });
   },
 
   openFindBar: (replaceMode) => {
@@ -519,15 +530,17 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
 
   printActiveTab: () => {
-    // window.open("") does not return a usable window in the Tauri WebView
-    // (and "noopener" guarantees a null reference), so we print the current
-    // window instead. @media print rules in app.css hide all app chrome and
-    // style the active editor surface for paper.
-    const active = document.activeElement;
-    if (active instanceof HTMLElement) {
-      active.blur();
+    const editor = get().getActiveEditor();
+    const activeTab = get().tabs.find((tab) => tab.id === get().activeTabId);
+    const title = activeTab?.title ?? "Document";
+
+    if (editor && !editor.isDestroyed) {
+      printHtmlDocument(editor.getHTML(), title);
+      return;
     }
-    window.print();
+
+    // No live editor (e.g. browser dev before mount): fall back to in-window print.
+    printCurrentWindow();
   },
 
   persistSession: async () => {

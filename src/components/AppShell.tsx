@@ -9,6 +9,7 @@ import { exitApplication, type MenuItem, type MenuSection } from "./AppMenu";
 import { EmptyState } from "./EmptyState";
 import { FindReplaceBar } from "./FindReplaceBar";
 import { ImageInsertDialog } from "./ImageInsertDialog";
+import { LinkInsertDialog } from "./LinkInsertDialog";
 import { RawPane } from "./RawPane";
 import { ReferenceDefinitionsPanel } from "./ReferenceDefinitionsPanel";
 import { SettingsDialog } from "./SettingsDialog";
@@ -53,6 +54,8 @@ export function AppShell() {
   const setUpdateCheckOpen = useEditorStore((state) => state.setUpdateCheckOpen);
   const imageDialogOpen = useEditorStore((state) => state.imageDialogOpen);
   const setImageDialogOpen = useEditorStore((state) => state.setImageDialogOpen);
+  const linkDialogOpen = useEditorStore((state) => state.linkDialogOpen);
+  const setLinkDialogOpen = useEditorStore((state) => state.setLinkDialogOpen);
   const findBarOpen = useEditorStore((state) => state.findBarOpen);
   const openFindBar = useEditorStore((state) => state.openFindBar);
   const recentFiles = useEditorStore((state) => state.config.recentFiles);
@@ -383,6 +386,11 @@ export function AppShell() {
         open={imageDialogOpen}
         editor={activeEditor}
         onClose={() => setImageDialogOpen(false)}
+      />
+      <LinkInsertDialog
+        open={linkDialogOpen}
+        editor={activeEditor}
+        onClose={() => setLinkDialogOpen(false)}
       />
     </div>
   );

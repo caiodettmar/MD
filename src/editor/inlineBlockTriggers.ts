@@ -123,6 +123,18 @@ export const InlineBlockTriggers = Extension.create({
             .run();
         },
       }),
+      new InputRule({
+        find: /^```([a-zA-Z0-9+#.-]*)$/,
+        handler: ({ chain, range, match }) => {
+          const language = match[1]?.trim();
+          const command = chain().deleteRange({ from: range.from, to: range.to });
+          if (language) {
+            command.setCodeBlock({ language }).run();
+          } else {
+            command.toggleCodeBlock().run();
+          }
+        },
+      }),
     ];
   },
 });

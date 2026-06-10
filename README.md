@@ -30,6 +30,22 @@ npm run tauri:build
 - Undo/redo: full history stack with redo (`Ctrl+Y` / `Ctrl+Shift+Z`) plus Edit menu entries; raw pane textarea keeps its native undo
 - Reference definitions: completed definitions hidden in WYSIWYG, serialized at document end, editable via **Edit references** panel (View menu)
 - Footnotes: `[^id]` references and multiline `[^id]:` definitions round-trip; definitions stay visible in WYSIWYG (jump-to-definition deferred)
+- Print: in-window `window.print()` with dedicated `@media print` styles (Tauri WebView-safe); File menu and `Ctrl+P`
+
+## Phase 5 (complete)
+
+- **Settings** (`Ctrl+,` / File → Settings): theme, session restore, font size, wrap, zoom, emoji save mode, raw pane on startup, update checks, auto-save interval
+- **Find/replace**: `Ctrl+F` / `Ctrl+H`
+- **Recent files**: File → Open Recent (last 10 paths)
+- **Updates**: Help → Check for Updates dialog stub (full auto-updater deferred to release engineering)
+
+## Phase 6 (mostly complete)
+
+- Slash menu: Table (3x3 + header) and Image (URL + alt dialog) inserts
+- Selection toolbar: highlight color swatches + remove, inline link add/edit/remove with optional title
+- Superscript `^` delimiter (with footnote guard); subscript via slash/toolbar (`~` conflicts with strikethrough)
+
+Out of scope for now: definition lists, image drag-drop, escaping, raw HTML blocks.
 
 ## Storage
 

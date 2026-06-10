@@ -1025,7 +1025,8 @@
   }
 
   .editor-stack,
-  .editor-stack.has-raw-pane {
+  .editor-stack.has-raw-pane,
+  .editor-stack.is-hidden {
     display: block;
     height: auto;
   }

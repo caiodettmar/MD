@@ -102,8 +102,17 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
         </label>
 
         <label className="settings-dialog__row">
-          <span>Zoom (also Ctrl+wheel)</span>
-          <span className="settings-dialog__value">{config.editorZoom}%</span>
+          <span>Default zoom ({config.editorZoom}%)</span>
+          <input
+            type="range"
+            min={50}
+            max={200}
+            step={10}
+            value={config.editorZoom}
+            onChange={(event) =>
+              updateConfig({ editorZoom: Number(event.target.value) })
+            }
+          />
         </label>
 
         <label className="settings-dialog__row">

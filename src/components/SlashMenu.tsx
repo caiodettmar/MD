@@ -110,6 +110,15 @@ const blockItems = [
       useEditorStore.getState().setImageDialogOpen(true);
     },
   },
+  {
+    id: "block-link",
+    label: "Link",
+    hint: "url",
+    keywords: ["link", "url", "href"],
+    run: () => {
+      useEditorStore.getState().setLinkDialogOpen(true);
+    },
+  },
 ];
 
 function matchesSlashQuery(

@@ -1,6 +1,6 @@
 # MD — Implementation Checklist
 
-Track what is **done**, **partial**, or **not started**. Last updated to match the codebase at v0.1.0.
+Track what is **done**, **partial**, or **not started**. Last updated to match the codebase at v0.1.0 (Phase 5/6 in progress).
 
 Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 
@@ -17,7 +17,7 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Session restore (including unsaved) | Default on; `config.restoreSession` |
 | ✅ | Periodic session auto-save | `config.autoSaveMs` (default 2s) |
 | ✅ | Config load/save (backend) | `config.json` via Tauri |
-| ⬜ | Settings / Preferences UI | Config fields exist but no dialog to edit them |
+| ✅ | Settings / Preferences UI | `SettingsDialog.tsx`; File menu + `Ctrl+,`; applies immediately, Reset to defaults |
 | ✅ | Portable mode detection | `MD/portable.flag` next to executable |
 | ✅ | Installed storage path | `%APPDATA%\MD\` |
 | ✅ | `.md` file association | `tauri.conf.json` bundle |
@@ -25,7 +25,7 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | About dialog | Version 0.1.0 |
 | ✅ | Exit application | Menu + Tauri `exit_app` |
 | ✅ | Window title reflects dirty state | `AppShell.tsx` |
-| ⬜ | Recent files list | — |
+| ✅ | Recent files list | Last 10 paths in `config.recentFiles` (TS + Rust); File > Open Recent + Clear |
 | ⬜ | macOS / Linux builds | Windows-first v1 |
 
 ---
@@ -39,13 +39,13 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Zoom in/out/reset | `Ctrl+±`, `Ctrl+0`, `Ctrl+wheel` |
 | ✅ | Font size scaling | `config.fontSize` applied in editor shell |
 | ✅ | Word wrap | `config.wordWrap`; shown in status bar |
-| ⬜ | Toggle wrap from UI | Config only; no menu control |
+| ✅ | Toggle wrap from UI | Settings dialog checkbox |
 | ✅ | Status bar | Path, UTF-8, save state, wrap, zoom |
 | ✅ | System / light / dark theme | `config.theme` → `data-theme` |
-| ⬜ | Theme picker in UI | Config only |
+| ✅ | Theme picker in UI | Settings dialog select (system/light/dark) |
 | ✅ | Placeholder hint | "Start writing, or press / for commands…" |
-| ✅ | Print | `Ctrl+P`; basic HTML print window |
-| ⬜ | Find / replace | — |
+| ✅ | Print | `Ctrl+P`; hidden iframe with styled HTML (`printDocument.ts`); `@media print` fallback when no editor |
+| ✅ | Find / replace | `Ctrl+F` / `Ctrl+H` find bar; decoration highlights, next/prev, match count, replace one/all |
 
 ---
 
@@ -60,11 +60,11 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Inline code | `` ` `` | Delimiters hidden |
 | ✅ | Underline | Slash / toolbar | No delimiter rule |
 | ✅ | Text color | Selection toolbar | Serializes as `<span style="color: …">` |
-| 🟡 | Multi-color highlight | Extension supports multicolor | Toolbar only toggles default highlight |
+| ✅ | Multi-color highlight | Selection toolbar swatches | Colored highlight serializes as `<mark style>` via `MarkdownHighlight`; default stays `==…==` |
 | ✅ | Emoji shortcode | `:name:` | gemoji lookup |
 | 🟡 | Emoji save mode | `config.emojiSaveMode` | Config stored; serialization not differentiated |
-| ⬜ | Subscript typing | — | Extension loaded; no input rule / slash entry |
-| ⬜ | Superscript typing | — | Extension loaded; no input rule / slash entry |
+| 🟡 | Subscript typing | Slash menu / toolbar | In `markRegistry`; `~` input rule deferred (conflicts with `~~` strikethrough) |
+| ✅ | Superscript typing | `^` | Input rule with footnote (`[^`) guard; also slash menu / toolbar |
 
 ---
 
@@ -79,9 +79,9 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Blockquote | `> ` at line start | |
 | ✅ | Horizontal rule | `---` at line start | |
 | ✅ | Fenced code block | Slash menu / TipTap | Shiki highlighting |
-| 🟡 | Fenced code + language | TipTap default | No ` ```lang ` line-start trigger verified |
-| 🟡 | Tables | TipTap table extension | Edit in WYSIWYG; no slash insert / markdown trigger |
-| 🟡 | Images | TipTap image extension | No insert UI, URL rule, or drag-drop |
+| ✅ | Fenced code + language | ` ```lang ` at line start | `inlineBlockTriggers.ts` |
+| 🟡 | Tables | Slash menu "Table" (3x3 + header) | Edit in WYSIWYG; no markdown line-start trigger |
+| 🟡 | Images | Slash menu "Image" → URL + alt dialog | No paste/drag-drop insert |
 | ⬜ | Definition lists | — | Not implemented |
 | ✅ | Paragraphs | Default | |
 
@@ -97,9 +97,9 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Formatting section | From `markRegistry` |
 | ✅ | Blocks section | Headings, lists, quote, code, HR |
 | ✅ | Emoji submenu | Preset grid |
-| ⬜ | Table insert | — |
-| ⬜ | Image insert | — |
-| ⬜ | Link insert | — |
+| ✅ | Table insert | 3x3 with header row |
+| ✅ | Image insert | URL + alt dialog (`ImageInsertDialog.tsx`) |
+| ✅ | Link insert | Opens `LinkInsertDialog` (selection or URL at cursor) |
 
 ---
 
@@ -110,9 +110,9 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Appears on text selection | Custom portal toolbar (not static bar) |
 | ✅ | Bold / italic / strike / highlight / underline / code | Via `markRegistry` |
 | ✅ | Text color swatches | Preset colors + reset |
-| ⬜ | Highlight color swatches | — |
+| ✅ | Highlight color swatches | Presets + remove highlight button |
 | ⬜ | Heading / list / quote actions | Spec mentioned Word-like bar; not implemented |
-| ⬜ | Link edit / remove | — |
+| ✅ | Link edit / remove | Link button → `LinkEditDialog` (add/update/remove, optional title) |
 
 ---
 
@@ -131,7 +131,7 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | External link click confirmation | Modal before open |
 | ✅ | Open via Tauri opener plugin | Fallback `window.open` in dev |
 | ✅ | External link visual indicator | CSS-only superscript ↗ on `http(s)` hrefs (`app.css`); internal/anchor links unaffected |
-| ⬜ | Inline link title editing | — |
+| ✅ | Inline link title editing | Via bubble menu link dialog |
 
 ---
 
@@ -154,9 +154,9 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Markdown round-trip (editor ↔ string) | `@tiptap/markdown` |
 | ✅ | Markdown paste (plain text) | `markdownPaste.ts` |
 | ✅ | Colored text in raw pane | HTML span serialization |
-| 🟡 | Markdown Guide — basic syntax | Most covered; gaps: images, some link variants |
-| 🟡 | Markdown Guide — extended syntax | Tables/tasks/strike/footnote partial |
-| ⬜ | Markdown Guide — hacks | Underline, sub/sup, definition lists, etc. |
+| 🟡 | Markdown Guide — basic syntax | Covered incl. images/links; escaping + raw HTML blocks out of scope |
+| 🟡 | Markdown Guide — extended syntax | Tables, tasks, strike, highlight, footnotes, sub/sup covered; definition lists missing |
+| 🟡 | Markdown Guide — hacks | Underline, sub/sup done; definition lists, indent tricks not planned |
 | ⬜ | Emoji shortcode round-trip option | `emojiSaveMode: "shortcode"` not enforced |
 
 ---
@@ -187,9 +187,9 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 
 | Status | Item | Notes |
 |--------|------|-------|
-| 🟡 | `checkUpdates` config flag | Stored; no updater logic |
-| ⬜ | Tauri auto-updater plugin | Not in `tauri.conf.json` plugins |
-| ⬜ | Manual download / release notes link | — |
+| ✅ | `checkUpdates` config flag | Settings checkbox; startup check is a logging no-op stub |
+| ⬜ | Tauri auto-updater plugin | Needs tauri-plugin-updater + signing keypair + release endpoint (release-engineering follow-up) |
+| ✅ | Manual update check dialog | Help → Check for Updates…; View releases button (`UpdateCheckDialog.tsx`) |
 | ⬜ | Code signing | — |
 
 ---
@@ -222,11 +222,11 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 
 ## Suggested next priorities
 
-1. **Settings dialog** — Expose `AppConfig`; unblocks theme, session, wrap, updates prefs.
-2. **Slash menu: image & table** — Highest-impact Markdown Guide gaps.
-3. **Selection toolbar: link + highlight colors** — Completes formatting bar spec.
-4. **Auto-updater** — Required for v1 release story.
-5. **Automated round-trip tests** — Lock in reference-definition and footnote behavior.
+1. **Auto-updater** — tauri-plugin-updater + signing keypair + release endpoint; required for v1 release story.
+2. **Automated round-trip tests** — Lock in reference-definition, footnote, and highlight serialization behavior.
+3. **Installer QA** — Smoke-test NSIS per-user/per-machine modes and portable bundle.
+4. **Subscript `~` input rule** — Revisit disambiguation against `~~` strikethrough (currently slash/toolbar only).
+5. **Definition lists & remaining Markdown Guide hacks** — Lowest priority parity gaps.
 
 ---
 
@@ -238,5 +238,5 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | 2 | Inline delimiters, slash menu, selection bar | ✅ Complete |
 | 3 | Colors, emoji, Shiki, paste, polish | ✅ Complete |
 | 4 | Links, refs, footnotes, print, stability | ✅ Complete (Settings UI & auto-update moved to Phase 5) |
-| 5 | Settings, updates, release QA | ⬜ Planned |
-| 6 | Markdown Guide parity | ⬜ Planned |
+| 5 | Settings, updates, release QA | 🟡 In progress (Settings UI, find/replace, recent files done; auto-updater & installer QA remain) |
+| 6 | Markdown Guide parity | 🟡 In progress (table/image/link slash, sub/sup, highlight colors, fenced lang; definition lists & hacks remain) |
