@@ -985,3 +985,99 @@
 .status-bar__meta {
   white-space: nowrap;
 }
+
+@media print {
+  @page {
+    margin: 2cm;
+  }
+
+  html,
+  body,
+  #root {
+    height: auto;
+    overflow: visible;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .tab-bar,
+  .status-bar,
+  .references-panel,
+  .raw-pane,
+  .selection-toolbar,
+  .slash-menu,
+  .modal-backdrop,
+  .app-menu__dropdown,
+  .empty-state {
+    display: none !important;
+  }
+
+  .app-shell {
+    display: block;
+    height: auto;
+    background: #fff;
+  }
+
+  .workspace {
+    overflow: visible;
+  }
+
+  .editor-stack,
+  .editor-stack.has-raw-pane {
+    display: block;
+    height: auto;
+  }
+
+  .md-editor-shell {
+    height: auto;
+    overflow: visible;
+    padding: 0;
+    zoom: 1 !important;
+    font-size: 100% !important;
+  }
+
+  .md-editor-surface {
+    max-width: none;
+    min-height: 0;
+    color: #000;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 12pt;
+    line-height: 1.6;
+  }
+
+  .md-editor-surface a,
+  .md-editor-surface a.md-link {
+    color: #000;
+  }
+
+  .md-editor-surface pre,
+  .md-editor-surface code,
+  .md-code-block__highlight,
+  .md-code-block__editor {
+    font-family: Consolas, "Cascadia Code", monospace;
+  }
+
+  .md-editor-surface blockquote {
+    border-left: 3px solid #999;
+    color: #444;
+  }
+
+  .md-editor-surface .md-link-ref-definition,
+  .md-link-ref-definition {
+    display: none !important;
+  }
+
+  .md-code-block__body {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .md-code-block,
+  .md-editor-surface pre,
+  .md-editor-surface blockquote,
+  .md-editor-surface table {
+    break-inside: avoid;
+  }
+}

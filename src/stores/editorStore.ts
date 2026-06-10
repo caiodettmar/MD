@@ -405,33 +405,15 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
 
   printActiveTab: () => {
-    const editor = get().getActiveEditor();
-    if (!editor) {
-      return;
+    // window.open("") does not return a usable window in the Tauri WebView
+    // (and "noopener" guarantees a null reference), so we print the current
+    // window instead. @media print rules in app.css hide all app chrome and
+    // style the active editor surface for paper.
+    const active = document.activeElement;
+    if (active instanceof HTMLElement) {
+      active.blur();
     }
-
-    const html = editor.getHTML();
-    const printWindow = window.open("", "_blank", "noopener,noreferrer");
-    if (!printWindow) {
-      return;
-    }
-
-    printWindow.document.write(`<!doctype html>
-<html>
-  <head>
-    <title>Print</title>
-    <style>
-      body { font-family: Georgia, serif; line-height: 1.6; padding: 2rem; max-width: 720px; margin: 0 auto; }
-      pre, code { font-family: Consolas, monospace; }
-      blockquote { border-left: 3px solid #ccc; margin-left: 0; padding-left: 1rem; color: #555; }
-    </style>
-  </head>
-  <body>${html}</body>
-</html>`);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
+    window.print();
   },
 
   persistSession: async () => {
