@@ -13,6 +13,7 @@ import type { Editor } from "@tiptap/react";
 import { EMOJI_PRESETS } from "../editor/constants/emojiPresets";
 import { insertDefaultTable } from "../editor/blockCommands";
 import { insertDefinitionList } from "../editor/definitionListExtension";
+import { insertTableOfContents } from "../editor/tableOfContentsExtension";
 import { isInsideLinkReferenceDefinition } from "../editor/linkReferenceDefinitionUtils";
 import { markRegistry } from "../editor/markRegistry";
 import { scoreSlashMatch } from "../editor/slashMenuUtils";
@@ -105,6 +106,13 @@ const blockItems = [
     hint: "dl",
     keywords: ["definition", "deflist", "dl", "term"],
     run: (e: Editor) => insertDefinitionList(e),
+  },
+  {
+    id: "block-toc",
+    label: "Table of contents",
+    hint: "TOC",
+    keywords: ["toc", "contents", "outline"],
+    run: (e: Editor) => insertTableOfContents(e),
   },
   {
     id: "block-image",

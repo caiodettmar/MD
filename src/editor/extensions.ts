@@ -34,7 +34,9 @@ import {
   DefinitionList,
   DefinitionTerm,
 } from "./definitionListExtension";
+import { HeadingWithAnchor } from "./headingAnchorExtension";
 import { ShikiCodeBlock } from "./shikiCodeBlockExtension";
+import { TableOfContents } from "./tableOfContentsExtension";
 
 const NoInputBold = Bold.extend({ addInputRules: () => [] });
 const NoInputItalic = Italic.extend({ addInputRules: () => [] });
@@ -52,10 +54,11 @@ export function createEditorExtensions(
       strike: false,
       codeBlock: false,
       underline: false,
-      heading: {
-        levels: [1, 2, 3, 4, 5, 6],
-      },
+      heading: false,
       link: false,
+    }),
+    HeadingWithAnchor.configure({
+      levels: [1, 2, 3, 4, 5, 6],
     }),
     NoInputBold,
     NoInputItalic,
@@ -106,6 +109,7 @@ export function createEditorExtensions(
     DefinitionList,
     DefinitionTerm,
     DefinitionDescription,
+    TableOfContents,
     MarkdownTable.configure({
       resizable: true,
     }),

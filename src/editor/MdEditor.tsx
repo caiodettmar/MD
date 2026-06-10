@@ -9,6 +9,7 @@ import {
 import { SlashMenu } from "../components/SlashMenu";
 import { createEditorExtensions } from "./extensions";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
+import { EditorImageMenu } from "./EditorImageMenu";
 import { refreshImageDisplaySrc } from "./markdownImage";
 import { insertConfirmedReferenceDefinition } from "./linkReferenceDefinitionUtils";
 import { setLinkClickHandler } from "./linkClickGuard";
@@ -210,6 +211,7 @@ export function MdEditor({
         {isActive ? (
           <>
             <EditorBubbleMenu editor={editor} />
+            <EditorImageMenu editor={editor} />
             <SlashMenu editor={editor} />
           </>
         ) : null}

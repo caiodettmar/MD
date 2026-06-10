@@ -21,7 +21,7 @@ export const DefinitionTerm = Node.create({
   },
 
   renderMarkdown(node, helpers) {
-    return `<dt>${helpers.renderChildren(node)}</dt>`;
+    return helpers.renderChildren(node);
   },
 });
 
@@ -43,9 +43,125 @@ export const DefinitionDescription = Node.create({
   },
 
   renderMarkdown(node, helpers) {
-    return `<dd>${helpers.renderChildren(node)}</dd>`;
+    const body = helpers.renderChildren(node).trimEnd();
+    return body ? `: ${body}` : ":";
   },
 });
+
+interface ParsedDefinitionGroup {
+  term: string;
+  tokens: JSONContent[];
+}
+
+function isDefinitionTermLine(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) {
+    return false;
+  }
+
+  if (/^\[\^/.test(trimmed)) {
+    return false;
+  }
+
+  if (/^\[(?!\^)([^\]]+)\]:\s*/.test(trimmed)) {
+    return false;
+  }
+
+  if (/^#{1,6}\s/.test(trimmed)) {
+    return false;
+  }
+
+  if (/^>\s/.test(trimmed)) {
+    return false;
+  }
+
+  if (/^[-*+]\s/.test(trimmed)) {
+    return false;
+  }
+
+  if (/^\d+\.\s/.test(trimmed)) {
+    return false;
+  }
+
+  if (/^\|/.test(trimmed)) {
+    return false;
+  }
+
+  if (/^```/.test(trimmed)) {
+    return false;
+  }
+
+  if (/^---+\s*$/.test(trimmed)) {
+    return false;
+  }
+
+  if (/^\[TOC\]$/i.test(trimmed)) {
+    return false;
+  }
+
+  if (/^:\s?/.test(trimmed)) {
+    return false;
+  }
+
+  return true;
+}
+
+function parseDefinitionListBlock(src: string): {
+  raw: string;
+  groups: Array<{ term: string; definitionLines: string[] }>;
+} | null {
+  const lines = src.split("\n");
+  let index = 0;
+  const groups: Array<{ term: string; definitionLines: string[] }> = [];
+  const rawLines: string[] = [];
+
+  while (index < lines.length) {
+    while (index < lines.length && lines[index].trim() === "") {
+      index += 1;
+    }
+
+    if (index >= lines.length) {
+      break;
+    }
+
+    const termLine = lines[index];
+    if (!isDefinitionTermLine(termLine)) {
+      break;
+    }
+
+    const term = termLine.trimEnd();
+    index += 1;
+    rawLines.push(termLine);
+
+    const definitionLines: string[] = [];
+    while (index < lines.length) {
+      const line = lines[index];
+      const definitionMatch = /^(\s*):(?:\s+(.*)|\s*)$/.exec(line);
+      if (!definitionMatch) {
+        break;
+      }
+
+      definitionLines.push(definitionMatch[2] ?? "");
+      rawLines.push(line);
+      index += 1;
+    }
+
+    if (definitionLines.length === 0) {
+      if (groups.length === 0) {
+        return null;
+      }
+      break;
+    }
+
+    groups.push({ term: term.trim(), definitionLines });
+  }
+
+  if (groups.length === 0) {
+    return null;
+  }
+
+  return { raw: rawLines.join("\n"), groups };
+}
 
 export const DefinitionList = Node.create({
   name: "definitionList",
@@ -53,6 +169,8 @@ export const DefinitionList = Node.create({
   group: "block",
 
   content: "(definitionTerm definitionDescription)+",
+
+  priority: 1000,
 
   parseHTML() {
     return [{ tag: "dl" }];
@@ -67,11 +185,80 @@ export const DefinitionList = Node.create({
   },
 
   renderMarkdown(node, helpers) {
-    const chunks = (node.content ?? []).map((child: JSONContent, index: number) => {
-      return helpers.renderChild?.(child, index) ?? helpers.renderChildren([child]);
-    });
+    const children = node.content ?? [];
+    const chunks: string[] = [];
 
-    return `<dl>\n${chunks.join("\n")}\n</dl>`;
+    for (let index = 0; index < children.length; index += 2) {
+      const term = children[index];
+      const description = children[index + 1];
+      if (!term || !description) {
+        continue;
+      }
+
+      const termText =
+        helpers.renderChild?.(term, index) ??
+        helpers.renderChildren([term]).trimEnd();
+      const definitionText =
+        helpers.renderChild?.(description, index + 1) ??
+        helpers.renderChildren([description]).trimEnd();
+
+      chunks.push(`${termText}\n${definitionText}`);
+    }
+
+    return chunks.join("\n\n");
+  },
+
+  parseMarkdown(token, helpers) {
+    const groups = (token.meta?.groups as ParsedDefinitionGroup[] | undefined) ?? [];
+    const content = groups.flatMap((group) => [
+      {
+        type: "definitionTerm",
+        content: group.term ? [{ type: "text", text: group.term }] : [],
+      },
+      {
+        type: "definitionDescription",
+        content: helpers.parseChildren(group.tokens ?? []),
+      },
+    ]);
+
+    return helpers.createNode("definitionList", {}, content);
+  },
+
+  markdownTokenizer: {
+    name: "definitionList",
+    level: "block",
+    start(src) {
+      const lines = src.split("\n");
+      for (let index = 0; index < lines.length - 1; index += 1) {
+        const termLine = lines[index];
+        const nextLine = lines[index + 1];
+        if (
+          isDefinitionTermLine(termLine) &&
+          /^(\s*):(?:\s|$)/.test(nextLine)
+        ) {
+          return src.indexOf(termLine);
+        }
+      }
+
+      return -1;
+    },
+    tokenize(src, _tokens, lexer) {
+      const parsed = parseDefinitionListBlock(src);
+      if (!parsed) {
+        return undefined;
+      }
+
+      const groups: ParsedDefinitionGroup[] = parsed.groups.map((group) => ({
+        term: group.term,
+        tokens: lexer.blockTokens(group.definitionLines.join("\n") || " "),
+      }));
+
+      return {
+        type: "definitionList",
+        raw: parsed.raw,
+        meta: { groups },
+      };
+    },
   },
 
   addCommands() {

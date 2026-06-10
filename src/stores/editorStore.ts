@@ -13,6 +13,7 @@ import {
   printCurrentWindow,
   printHtmlDocument,
 } from "../lib/printDocument";
+import { runStartupUpdateCheck } from "../lib/updateCheck";
 import {
   loadConfig,
   loadSession,
@@ -36,6 +37,7 @@ interface EditorStore {
   settingsOpen: boolean;
   updateCheckOpen: boolean;
   imageDialogOpen: boolean;
+  imageEditPos: number | null;
   linkDialogOpen: boolean;
   findBarOpen: boolean;
   findBarReplaceMode: boolean;
@@ -46,6 +48,8 @@ interface EditorStore {
   setSettingsOpen: (open: boolean) => void;
   setUpdateCheckOpen: (open: boolean) => void;
   setImageDialogOpen: (open: boolean) => void;
+  openImageEdit: (pos: number) => void;
+  clearImageEdit: () => void;
   setLinkDialogOpen: (open: boolean) => void;
   openFindBar: (replaceMode: boolean) => void;
   closeFindBar: () => void;
@@ -129,6 +133,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   settingsOpen: false,
   updateCheckOpen: false,
   imageDialogOpen: false,
+  imageEditPos: null,
   linkDialogOpen: false,
   findBarOpen: false,
   findBarReplaceMode: false,
@@ -181,11 +186,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         activeTabId,
         showRawPane: config.showRawOnStartup,
       });
-      if (config.checkUpdates) {
-        // Startup update check stub: no network calls until a release
-        // endpoint exists (see docs/implementation-plan.md, Phase 5).
-        console.info("MD update check skipped (no release endpoint configured).");
-      }
+      void runStartupUpdateCheck(config.checkUpdates);
     } catch (error) {
       console.error("Failed to initialize MD:", error);
     }
@@ -220,7 +221,15 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
 
   setImageDialogOpen: (open) => {
-    set({ imageDialogOpen: open });
+    set({ imageDialogOpen: open, ...(open ? {} : { imageEditPos: null }) });
+  },
+
+  openImageEdit: (pos) => {
+    set({ imageEditPos: pos, imageDialogOpen: true });
+  },
+
+  clearImageEdit: () => {
+    set({ imageEditPos: null });
   },
 
   setLinkDialogOpen: (open) => {

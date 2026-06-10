@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import type { Editor } from "@tiptap/react";
-import { buildImageNodeAttrs, isTauriRuntime } from "../lib/imageSrc";
+import { buildImageNodeAttrs, isTauriRuntime, toMarkdownImageSrc } from "../lib/imageSrc";
 import { pickImageFilePath } from "../lib/tauri";
 
 interface ImageInsertDialogProps {
   open: boolean;
   editor: Editor | null;
   documentPath: string | null;
+  editPos?: number | null;
   onClose: () => void;
 }
 
@@ -14,39 +15,85 @@ export function ImageInsertDialog({
   open,
   editor,
   documentPath,
+  editPos = null,
   onClose,
 }: ImageInsertDialogProps) {
   const [src, setSrc] = useState("");
   const [alt, setAlt] = useState("");
   const [pickingFile, setPickingFile] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const isEditMode = editPos !== null;
 
   useEffect(() => {
-    if (open) {
+    if (!open || !editor) {
+      return;
+    }
+
+    if (isEditMode && editPos !== null) {
+      const node = editor.state.doc.nodeAt(editPos);
+      if (node?.type.name === "image") {
+        const markdownSrc = toMarkdownImageSrc(
+          String(node.attrs.src ?? ""),
+          node.attrs.markdownSrc as string | null | undefined,
+          documentPath,
+        );
+        setSrc(markdownSrc);
+        setAlt(String(node.attrs.alt ?? ""));
+      }
+    } else {
       setSrc("");
       setAlt("");
-      window.setTimeout(() => inputRef.current?.focus(), 0);
     }
-  }, [open]);
+
+    window.setTimeout(() => inputRef.current?.focus(), 0);
+  }, [editPos, editor, isEditMode, open]);
 
   if (!open) {
     return null;
   }
 
-  const insertImage = (markdownSrc: string, altText: string) => {
+  const applyImage = (markdownSrc: string, altText: string) => {
     if (!markdownSrc.trim() || !editor) {
       return;
     }
 
     const attrs = buildImageNodeAttrs(markdownSrc, documentPath, {
       alt: altText.trim() || null,
+      title:
+        isEditMode && editPos !== null
+          ? ((editor.state.doc.nodeAt(editPos)?.attrs.title as
+              | string
+              | null
+              | undefined) ?? null)
+          : null,
     });
-    editor.chain().focus().insertContent({ type: "image", attrs }).run();
+
+    if (isEditMode && editPos !== null) {
+      editor
+        .chain()
+        .focus()
+        .command(({ tr, dispatch }) => {
+          const node = tr.doc.nodeAt(editPos);
+          if (!node || node.type.name !== "image") {
+            return false;
+          }
+
+          if (dispatch) {
+            dispatch(tr.setNodeMarkup(editPos, undefined, attrs));
+          }
+
+          return true;
+        })
+        .run();
+    } else {
+      editor.chain().focus().insertContent({ type: "image", attrs }).run();
+    }
+
     onClose();
   };
 
   const insert = () => {
-    insertImage(src, alt);
+    applyImage(src, alt);
   };
 
   const browseLocalFile = async () => {
@@ -85,7 +132,9 @@ export function ImageInsertDialog({
           }
         }}
       >
-        <h2 id="image-insert-title">Insert image</h2>
+        <h2 id="image-insert-title">
+          {isEditMode ? "Change image path" : "Insert image"}
+        </h2>
         <label className="insert-dialog__field">
           <span>Image URL or file path</span>
           <input
@@ -124,7 +173,7 @@ export function ImageInsertDialog({
             Cancel
           </button>
           <button type="button" disabled={!src.trim()} onClick={insert}>
-            Insert
+            {isEditMode ? "Update" : "Insert"}
           </button>
         </div>
       </div>

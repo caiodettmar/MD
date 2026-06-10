@@ -40,17 +40,20 @@ export const MarkdownDelimiterMarks = Extension.create({
       toggleStoredMarkRule("strike", "~~"),
       toggleStoredMarkRule("highlight", "=="),
       toggleStoredMarkRule("code", "`"),
+      // Subscript via `~ ` (tilde + space). Space avoids bare `~` in words;
+      // guard skips `~~` strikethrough. Same trigger toggles stored mark off.
       new InputRule({
-        find: /~$/,
+        find: /~ $/,
         handler: ({ state, range }) => {
           const markType = state.schema.marks.subscript;
           if (!markType) {
             return null;
           }
 
+          const tildeFrom = range.from;
           const before = state.doc.textBetween(
-            Math.max(0, range.from - 1),
-            range.from,
+            Math.max(0, tildeFrom - 1),
+            tildeFrom,
           );
           if (before === "~") {
             return null;

@@ -53,7 +53,9 @@ export function AppShell() {
   const updateCheckOpen = useEditorStore((state) => state.updateCheckOpen);
   const setUpdateCheckOpen = useEditorStore((state) => state.setUpdateCheckOpen);
   const imageDialogOpen = useEditorStore((state) => state.imageDialogOpen);
+  const imageEditPos = useEditorStore((state) => state.imageEditPos);
   const setImageDialogOpen = useEditorStore((state) => state.setImageDialogOpen);
+  const clearImageEdit = useEditorStore((state) => state.clearImageEdit);
   const linkDialogOpen = useEditorStore((state) => state.linkDialogOpen);
   const setLinkDialogOpen = useEditorStore((state) => state.setLinkDialogOpen);
   const findBarOpen = useEditorStore((state) => state.findBarOpen);
@@ -387,7 +389,11 @@ export function AppShell() {
         open={imageDialogOpen}
         editor={activeEditor}
         documentPath={activeTab?.path ?? null}
-        onClose={() => setImageDialogOpen(false)}
+        editPos={imageEditPos}
+        onClose={() => {
+          clearImageEdit();
+          setImageDialogOpen(false);
+        }}
       />
       <LinkInsertDialog
         open={linkDialogOpen}

@@ -60,7 +60,7 @@ export const markRegistry: MarkRegistryEntry[] = [
   {
     id: "subscript",
     label: "Subscript",
-    shortcutLabel: "~",
+    shortcutLabel: "~ ",
     slashKeywords: ["sub", "subscript"],
     run: (editor) => editor.chain().focus().toggleSubscript().run(),
   },

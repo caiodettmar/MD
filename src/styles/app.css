@@ -553,6 +553,82 @@
   margin-bottom: 0;
 }
 
+.md-editor-surface .md-toc-wrapper {
+  margin: 1rem 0;
+}
+
+.md-editor-surface .md-toc {
+  border: 2px dotted var(--border);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: color-mix(in srgb, var(--bg-app) 92%, var(--bg-muted));
+}
+
+.md-editor-surface .md-toc.is-selected {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+}
+
+.md-editor-surface .md-toc__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.md-editor-surface .md-toc.is-collapsed .md-toc__header {
+  margin-bottom: 0;
+}
+
+.md-editor-surface .md-toc__toggle,
+.md-editor-surface .md-toc__update {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  padding: 0;
+}
+
+.md-editor-surface .md-toc__update {
+  color: var(--accent);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.md-editor-surface .md-toc__list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.md-editor-surface .md-toc__item {
+  margin: 0.25rem 0;
+}
+
+.md-editor-surface .md-toc__item--h2 {
+  margin-left: 0.75rem;
+}
+
+.md-editor-surface .md-toc__item--h3 {
+  margin-left: 1.5rem;
+}
+
+.md-editor-surface .md-toc__link {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.md-editor-surface .md-toc__link:hover {
+  text-decoration: underline;
+}
+
+.md-editor-surface .md-toc__empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
 .md-editor-surface code {
   padding: 0.15rem 0.35rem;
   border-radius: 0.35rem;
@@ -1061,6 +1137,17 @@
   font-size: 0.9rem;
 }
 
+.modal-card__steps {
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.modal-card__steps li + li {
+  margin-top: 0.35rem;
+}
+
 .modal-card button {
   margin-top: 1rem;
   border: 0;
@@ -1238,7 +1325,8 @@
   }
 }
 
-.settings-dialog {
+.settings-dialog,
+.update-check-dialog {
   width: min(92vw, 460px);
   max-height: 84vh;
   overflow-y: auto;

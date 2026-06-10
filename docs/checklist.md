@@ -1,6 +1,6 @@
 # MD — Implementation Checklist
 
-Track what is **done**, **partial**, or **not started**. Last updated to match the codebase at v0.1.0 (Phase 5/6 in progress).
+Track what is **done**, **partial**, or **not started**. Last updated to match the codebase at v0.1.0 (Phase 5 complete; Phase 6 in progress).
 
 Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 
@@ -21,7 +21,7 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Portable mode detection | `MD/portable.flag` next to executable |
 | ✅ | Installed storage path | `%APPDATA%\MD\` |
 | ✅ | `.md` file association | `tauri.conf.json` bundle |
-| 🟡 | Production installer | NSIS config present; not fully QA'd |
+| 🟡 | Production installer | NSIS `installMode: both`, associations, WebView2 bootstrapper; smoke-test checklist in `docs/release.md` |
 | ✅ | About dialog | Version 0.1.0 |
 | ✅ | Exit application | Menu + Tauri `exit_app` |
 | ✅ | Window title reflects dirty state | `AppShell.tsx` |
@@ -63,7 +63,7 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Multi-color highlight | Selection toolbar swatches | Colored highlight serializes as `<mark style>` via `MarkdownHighlight`; default stays `==…==` |
 | ✅ | Emoji shortcode | `:name:` | gemoji lookup |
 | 🟡 | Emoji save mode | `config.emojiSaveMode` | Config stored; serialization not differentiated |
-| ✅ | Subscript typing | `~` (before-char guard) / slash / toolbar | Raw pane serializes as `<sub>…</sub>`; single `~` skips when preceded by `~` so `~~` stays strikethrough |
+| ✅ | Subscript typing | `~ ` (tilde + space) / slash / toolbar | Delimiters hidden; `~~` strikethrough unchanged |
 | ✅ | Superscript typing | `^` | Input rule with footnote (`[^`) guard; raw pane serializes as `<sup>…</sup>`; also slash menu / toolbar |
 
 ---
@@ -81,9 +81,10 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Fenced code block | Slash menu / TipTap | Shiki highlighting |
 | ✅ | Fenced code + language | ` ```lang ` at line start | `inlineBlockTriggers.ts` |
 | ✅ | Tables | `\| ` at line start / slash menu | 3×3 with header row; WYSIWYG borders + resizable columns; multiline cells serialize as `<br>` in raw pane |
-| ✅ | Images | `![alt](url)` input rule / slash menu | URL/path dialog + local file picker (Tauri); relative paths via doc directory |
+| ✅ | Images | `![alt](url)` input rule / slash menu | URL/path dialog + local file picker; click image → Change path / Delete |
 | ✅ | Raw HTML images | `<img>` / `<picture>` in raw pane | Parsed into image nodes; round-trip via markdown or HTML with `data-md-src` |
-| ✅ | Definition lists | Slash menu / `: ` line-start | WYSIWYG `<dl>` styling; raw pane serializes as `<dl><dt><dd>` HTML |
+| ✅ | Definition lists | Slash menu / `: ` line-start / Kramdown markdown | `Term` + `: definition` lines parse in raw pane; WYSIWYG `<dl>` styling |
+| ✅ | Table of contents | Slash menu `[TOC]` | Scans H1–H3; dotted border box; Update ToC + collapse; heading `id` anchors |
 | ✅ | Paragraphs | Default | |
 
 ---
@@ -101,6 +102,7 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Table insert | 3x3 with header row |
 | ✅ | Image insert | URL + alt dialog (`ImageInsertDialog.tsx`) |
 | ✅ | Definition list insert | Slash menu "Definition list" |
+| ✅ | Table of contents insert | Slash menu "Table of contents" |
 | ✅ | Link insert | Opens `LinkInsertDialog` (selection or URL at cursor) |
 
 ---
@@ -192,10 +194,11 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 
 | Status | Item | Notes |
 |--------|------|-------|
-| ✅ | `checkUpdates` config flag | Settings checkbox; startup check is a logging no-op stub |
-| ⬜ | Tauri auto-updater plugin | Needs tauri-plugin-updater + signing keypair + release endpoint (release-engineering follow-up) |
-| ✅ | Manual update check dialog | Help → Check for Updates…; View releases button (`UpdateCheckDialog.tsx`) |
-| ⬜ | Code signing | — |
+| ✅ | `checkUpdates` config flag | Settings checkbox; startup runs `runStartupUpdateCheck` (console log, no network) |
+| ⬜ | Tauri auto-updater plugin | Deferred — needs tauri-plugin-updater + signing keypair + release endpoint (`docs/release.md`) |
+| ✅ | Manual update check dialog | Help → Check for Updates…; version compare placeholder + manual steps + View releases |
+| ⬜ | Code signing | Deferred post-v1 (`docs/release.md`) |
+| ✅ | Release documentation | `docs/release.md` — build, portable, NSIS, manual update, smoke-test checklist |
 
 ---
 
@@ -243,5 +246,5 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | 2 | Inline delimiters, slash menu, selection bar | ✅ Complete |
 | 3 | Colors, emoji, Shiki, paste, polish | ✅ Complete |
 | 4 | Links, refs, footnotes, print, stability | ✅ Complete (Settings UI & auto-update moved to Phase 5) |
-| 5 | Settings, updates, release QA | 🟡 In progress (Settings UI, find/replace, recent files done; auto-updater & installer QA remain) |
+| 5 | Settings, updates, release QA | ✅ Complete (deferred: code signing, live auto-updater, clean-VM installer QA) |
 | 6 | Markdown Guide parity | 🟡 In progress (definition lists, line-start triggers, toolbar blocks, subscript `~`; indent hacks remain) |
