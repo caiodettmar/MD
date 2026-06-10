@@ -113,6 +113,39 @@
   background: var(--border);
 }
 
+.app-menu__submenu-anchor {
+  position: relative;
+}
+
+.app-menu__item--submenu {
+  cursor: default;
+}
+
+.app-menu__submenu-caret {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.app-menu__submenu-anchor.is-open > .app-menu__item--submenu {
+  background: var(--accent-soft);
+}
+
+.app-menu__flyout {
+  position: absolute;
+  top: 0;
+  left: calc(100% - 0.15rem);
+  z-index: 45;
+  min-width: 260px;
+  max-width: min(420px, 70vw);
+  max-height: 70vh;
+  overflow: auto;
+  padding: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+  background: var(--bg-panel);
+  box-shadow: var(--shadow);
+}
+
 .tab-bar__tabs {
   display: flex;
   flex: 1;
@@ -191,6 +224,8 @@
 
 .editor-pane.is-active {
   display: block;
+  height: 100%;
+  min-height: 0;
 }
 
 .md-editor-shell {

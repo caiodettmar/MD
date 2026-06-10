@@ -78,30 +78,41 @@ export function AppShell() {
     [setEditor],
   );
 
-  const recentFileItems: MenuItem[] = useMemo(() => {
-    if (recentFiles.length === 0) {
-      return [];
+  const openRecentSubmenu: MenuItem = useMemo(() => {
+    const fileItems: MenuItem[] =
+      recentFiles.length === 0
+        ? [
+            {
+              id: "recent-empty",
+              label: "No recent files",
+              disabled: true,
+            },
+          ]
+        : recentFiles.map((path, index) => ({
+            id: `recent-${index}`,
+            label: fileNameFromPath(path),
+            title: path,
+            onSelect: () => void openFileByPath(path),
+          }));
+
+    if (recentFiles.length > 0) {
+      fileItems.push({
+        id: "sep-recent",
+        label: "",
+        separator: true,
+      });
+      fileItems.push({
+        id: "recent-clear",
+        label: "Clear Recent Files",
+        onSelect: () => clearRecentFiles(),
+      });
     }
 
-    const items: MenuItem[] = recentFiles.map((path, index) => ({
-      id: `recent-${index}`,
-      label: `${index + 1}. ${fileNameFromPath(path)}`,
-      onSelect: () => void openFileByPath(path),
-    }));
-
-    items.push({
-      id: "recent-clear",
-      label: "Clear Recent Files",
-      onSelect: () => clearRecentFiles(),
-    });
-    items.push({
-      id: "sep-recent",
-      label: "",
-      separator: true,
-      onSelect: () => {},
-    });
-
-    return items;
+    return {
+      id: "open-recent",
+      label: "Open Recent",
+      submenu: fileItems,
+    };
   }, [clearRecentFiles, openFileByPath, recentFiles]);
 
   const menuSections: MenuSection[] = useMemo(
@@ -123,7 +134,7 @@ export function AppShell() {
             onSelect: () => void openFileDialog(),
           },
           { id: "sep-1", label: "", separator: true, onSelect: () => {} },
-          ...recentFileItems,
+          openRecentSubmenu,
           {
             id: "save",
             label: "Save",
@@ -242,7 +253,7 @@ export function AppShell() {
       openFileDialog,
       openFindBar,
       printActiveTab,
-      recentFileItems,
+      openRecentSubmenu,
       resetZoom,
       saveActiveTab,
       saveActiveTabAs,

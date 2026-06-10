@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Editor } from "@tiptap/react";
 import type { Node as PMNode } from "@tiptap/pm/model";
-import { Plugin, PluginKey, TextSelection } from "@tiptap/pm/state";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { useEditorStore } from "../stores/editorStore";
 
@@ -57,6 +57,46 @@ function createFindHighlightPlugin(): Plugin<DecorationSet> {
         return findHighlightKey.getState(state) ?? DecorationSet.empty;
       },
     },
+  });
+}
+
+const SCROLL_MARGIN_PX = 48;
+
+function scrollMatchIntoView(editor: Editor, match: MatchRange) {
+  if (editor.isDestroyed) {
+    return;
+  }
+
+  editor
+    .chain()
+    .setTextSelection({ from: match.from, to: match.to })
+    .scrollIntoView()
+    .run();
+
+  // ProseMirror scrollIntoView can miss when the scroll parent is the zoomed
+  // .md-editor-shell wrapper instead of the document.
+  requestAnimationFrame(() => {
+    if (editor.isDestroyed) {
+      return;
+    }
+
+    const view = editor.view;
+    const start = view.coordsAtPos(match.from);
+    const end = view.coordsAtPos(match.to);
+    const shell = view.dom.closest<HTMLElement>(".md-editor-shell");
+    if (!shell) {
+      return;
+    }
+
+    const shellRect = shell.getBoundingClientRect();
+    const matchTop = Math.min(start.top, end.top);
+    const matchBottom = Math.max(start.bottom, end.bottom);
+
+    if (matchTop < shellRect.top + SCROLL_MARGIN_PX) {
+      shell.scrollTop += matchTop - shellRect.top - SCROLL_MARGIN_PX;
+    } else if (matchBottom > shellRect.bottom - SCROLL_MARGIN_PX) {
+      shell.scrollTop += matchBottom - shellRect.bottom + SCROLL_MARGIN_PX;
+    }
   });
 }
 
@@ -141,26 +181,27 @@ export function FindReplaceBar({ editor }: FindReplaceBarProps) {
   useEffect(() => {
     const handleUpdate = () => {
       const nextMatches = findMatches(editor.state.doc, queryRef.current);
+      const nextIndex =
+        nextMatches.length === 0
+          ? 0
+          : Math.min(currentIndex, nextMatches.length - 1);
       setMatches(nextMatches);
-      setCurrentIndex((index) =>
-        nextMatches.length === 0 ? 0 : Math.min(index, nextMatches.length - 1),
-      );
+      setCurrentIndex(nextIndex);
+      publishHighlights(nextMatches, nextIndex);
     };
 
     editor.on("update", handleUpdate);
     return () => {
       editor.off("update", handleUpdate);
     };
-  }, [editor]);
+  }, [currentIndex, editor, publishHighlights]);
 
   const revealMatch = useCallback(
     (match: MatchRange | undefined) => {
-      if (!match || editor.isDestroyed) {
+      if (!match) {
         return;
       }
-      const { doc, tr } = editor.state;
-      const selection = TextSelection.create(doc, match.from, match.to);
-      editor.view.dispatch(tr.setSelection(selection).scrollIntoView());
+      scrollMatchIntoView(editor, match);
     },
     [editor],
   );
@@ -228,8 +269,9 @@ export function FindReplaceBar({ editor }: FindReplaceBarProps) {
         }
       });
     editor.view.dispatch(tr);
-    recompute(query, 0);
-  }, [editor, matches, query, recompute, replacement]);
+    const { nextMatches, nextIndex } = recompute(query, 0);
+    revealMatch(nextMatches[nextIndex]);
+  }, [editor, matches, query, recompute, replacement, revealMatch]);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
