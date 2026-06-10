@@ -1,6 +1,6 @@
 import { isTextSelection, posToDOMRect } from "@tiptap/core";
 import type { Editor } from "@tiptap/react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { LinkEditDialog } from "../components/LinkEditDialog";
 import {
@@ -17,6 +17,8 @@ interface ToolbarPosition {
   top: number;
   left: number;
 }
+
+const TOOLBAR_VIEWPORT_PADDING = 8;
 
 function isMarkActive(editor: Editor, id: string): boolean {
   switch (id) {
@@ -55,7 +57,7 @@ function shouldShowSelectionToolbar(editor: Editor): boolean {
   return doc.textBetween(from, to).length > 0;
 }
 
-function getToolbarPosition(editor: Editor): ToolbarPosition | null {
+function getToolbarAnchor(editor: Editor): ToolbarPosition | null {
   if (!shouldShowSelectionToolbar(editor)) {
     return null;
   }
@@ -64,14 +66,33 @@ function getToolbarPosition(editor: Editor): ToolbarPosition | null {
   const rect = posToDOMRect(editor.view, from, to);
 
   return {
-    top: rect.top - 8,
+    top: rect.top - TOOLBAR_VIEWPORT_PADDING,
     left: rect.left + rect.width / 2,
   };
 }
 
+function clampToolbarPosition(
+  anchor: ToolbarPosition,
+  toolbarWidth: number,
+  toolbarHeight: number,
+): ToolbarPosition {
+  const halfWidth = toolbarWidth / 2;
+  const minLeft = TOOLBAR_VIEWPORT_PADDING + halfWidth;
+  const maxLeft = window.innerWidth - TOOLBAR_VIEWPORT_PADDING - halfWidth;
+  const minTop = TOOLBAR_VIEWPORT_PADDING + toolbarHeight;
+
+  return {
+    top: Math.max(minTop, anchor.top),
+    left: Math.min(Math.max(minLeft, anchor.left), maxLeft),
+  };
+}
+
 export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
+  const toolbarRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [position, setPosition] = useState<ToolbarPosition>({ top: 0, left: 0 });
+  const [textColorsOpen, setTextColorsOpen] = useState(false);
+  const [highlightColorsOpen, setHighlightColorsOpen] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkHref, setLinkHref] = useState("");
   const [linkTitle, setLinkTitle] = useState("");
@@ -105,14 +126,30 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
   }, [editor]);
 
   const syncToolbar = useCallback(() => {
-    const nextPosition = getToolbarPosition(editor);
-    if (!nextPosition) {
+    const anchor = getToolbarAnchor(editor);
+    if (!anchor) {
       setVisible(false);
+      setTextColorsOpen(false);
+      setHighlightColorsOpen(false);
       return;
     }
 
-    setPosition(nextPosition);
     setVisible(true);
+    window.requestAnimationFrame(() => {
+      const toolbar = toolbarRef.current;
+      if (!toolbar) {
+        setPosition(anchor);
+        return;
+      }
+
+      setPosition(
+        clampToolbarPosition(
+          anchor,
+          toolbar.offsetWidth,
+          toolbar.offsetHeight,
+        ),
+      );
+    });
   }, [editor]);
 
   useEffect(() => {
@@ -122,6 +159,8 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
 
     const handleBlur = () => {
       setVisible(false);
+      setTextColorsOpen(false);
+      setHighlightColorsOpen(false);
     };
 
     syncToolbar();
@@ -152,6 +191,7 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
 
   return createPortal(
     <div
+      ref={toolbarRef}
       className="selection-toolbar"
       style={{
         position: "fixed",
@@ -178,61 +218,106 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
         </button>
       ))}
       <span className="selection-toolbar__divider" aria-hidden="true" />
-      {TEXT_COLOR_PRESETS.filter((preset) => preset.value).map((preset) => (
+      <div className="selection-toolbar__group">
         <button
-          key={preset.id}
           type="button"
-          className="selection-toolbar__color"
-          title={`Text color: ${preset.label}`}
-          style={{ backgroundColor: preset.value }}
+          className={`selection-toolbar__button ${
+            textColorsOpen ? "is-active" : ""
+          }`}
+          title="Text color"
           onMouseDown={(event) => {
             event.preventDefault();
-            editor.chain().focus().setColor(preset.value).run();
+            setTextColorsOpen((open) => !open);
+            setHighlightColorsOpen(false);
           }}
-        />
-      ))}
-      <button
-        type="button"
-        className="selection-toolbar__button"
-        title="Reset text color"
-        onMouseDown={(event) => {
-          event.preventDefault();
-          editor.chain().focus().unsetColor().run();
-        }}
-      >
-        A
-      </button>
-      <span className="selection-toolbar__divider" aria-hidden="true" />
-      {HIGHLIGHT_COLOR_PRESETS.filter((preset) => preset.value).map(
-        (preset) => (
-          <button
-            key={`hl-${preset.id}`}
-            type="button"
-            className="selection-toolbar__color"
-            title={`Highlight: ${preset.label}`}
-            style={{ backgroundColor: preset.value }}
-            onMouseDown={(event) => {
-              event.preventDefault();
-              editor
-                .chain()
-                .focus()
-                .setHighlight({ color: preset.value })
-                .run();
-            }}
-          />
-        ),
-      )}
-      <button
-        type="button"
-        className="selection-toolbar__button"
-        title="Remove highlight"
-        onMouseDown={(event) => {
-          event.preventDefault();
-          editor.chain().focus().unsetHighlight().run();
-        }}
-      >
-        ⊘
-      </button>
+        >
+          A
+        </button>
+        {textColorsOpen ? (
+          <div className="selection-toolbar__popover">
+            {TEXT_COLOR_PRESETS.filter((preset) => preset.value).map(
+              (preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  className="selection-toolbar__color"
+                  title={`Text color: ${preset.label}`}
+                  style={{ backgroundColor: preset.value }}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    editor.chain().focus().setColor(preset.value).run();
+                    setTextColorsOpen(false);
+                  }}
+                />
+              ),
+            )}
+            <button
+              type="button"
+              className="selection-toolbar__button selection-toolbar__button--compact"
+              title="Reset text color"
+              onMouseDown={(event) => {
+                event.preventDefault();
+                editor.chain().focus().unsetColor().run();
+                setTextColorsOpen(false);
+              }}
+            >
+              Reset
+            </button>
+          </div>
+        ) : null}
+      </div>
+      <div className="selection-toolbar__group">
+        <button
+          type="button"
+          className={`selection-toolbar__button ${
+            highlightColorsOpen ? "is-active" : ""
+          }`}
+          title="Highlight color"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            setHighlightColorsOpen((open) => !open);
+            setTextColorsOpen(false);
+          }}
+        >
+          HL
+        </button>
+        {highlightColorsOpen ? (
+          <div className="selection-toolbar__popover">
+            {HIGHLIGHT_COLOR_PRESETS.filter((preset) => preset.value).map(
+              (preset) => (
+                <button
+                  key={`hl-${preset.id}`}
+                  type="button"
+                  className="selection-toolbar__color"
+                  title={`Highlight: ${preset.label}`}
+                  style={{ backgroundColor: preset.value }}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    editor
+                      .chain()
+                      .focus()
+                      .setHighlight({ color: preset.value })
+                      .run();
+                    setHighlightColorsOpen(false);
+                  }}
+                />
+              ),
+            )}
+            <button
+              type="button"
+              className="selection-toolbar__button selection-toolbar__button--compact"
+              title="Remove highlight"
+              onMouseDown={(event) => {
+                event.preventDefault();
+                editor.chain().focus().unsetHighlight().run();
+                setHighlightColorsOpen(false);
+              }}
+            >
+              Clear
+            </button>
+          </div>
+        ) : null}
+      </div>
       <span className="selection-toolbar__divider" aria-hidden="true" />
       <button
         type="button"

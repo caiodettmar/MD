@@ -338,6 +338,7 @@ export function AppShell() {
                 <MdEditor
                   key={tab.id}
                   tabId={tab.id}
+                  documentPath={tab.path}
                   markdown={tab.markdown}
                   editable
                   wordWrap={config.wordWrap}
@@ -385,6 +386,7 @@ export function AppShell() {
       <ImageInsertDialog
         open={imageDialogOpen}
         editor={activeEditor}
+        documentPath={activeTab?.path ?? null}
         onClose={() => setImageDialogOpen(false)}
       />
       <LinkInsertDialog

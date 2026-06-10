@@ -1,11 +1,8 @@
 import Bold from "@tiptap/extension-bold";
 import Code from "@tiptap/extension-code";
-import Image from "@tiptap/extension-image";
 import Italic from "@tiptap/extension-italic";
 import Placeholder from "@tiptap/extension-placeholder";
 import Strike from "@tiptap/extension-strike";
-import Subscript from "@tiptap/extension-subscript";
-import Superscript from "@tiptap/extension-superscript";
 import { Table } from "@tiptap/extension-table";
 import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
@@ -27,7 +24,10 @@ import { LinkReferenceMarkdownParser } from "./linkReferenceMarkdownParser";
 import { MarkdownLink } from "./markdownLink";
 import { MarkdownPaste } from "./markdownPaste";
 import { MarkdownDelimiterMarks } from "./markdownDelimiterMarks";
+import { createMarkdownImage } from "./markdownImage";
 import { MarkdownHighlight } from "./markdownHighlight";
+import { MarkdownSubscript } from "./markdownSubscript";
+import { MarkdownSuperscript } from "./markdownSuperscript";
 import { MarkdownTextStyle } from "./markdownTextStyle";
 import { ShikiCodeBlock } from "./shikiCodeBlockExtension";
 
@@ -36,7 +36,9 @@ const NoInputItalic = Italic.extend({ addInputRules: () => [] });
 const NoInputCode = Code.extend({ addInputRules: () => [] });
 const NoInputStrike = Strike.extend({ addInputRules: () => [] });
 
-export function createEditorExtensions() {
+export function createEditorExtensions(
+  getDocumentPath: () => string | null = () => null,
+) {
   return [
     StarterKit.configure({
       bold: false,
@@ -85,8 +87,8 @@ export function createEditorExtensions() {
         class: "md-highlight",
       },
     }),
-    Subscript,
-    Superscript,
+    MarkdownSubscript,
+    MarkdownSuperscript,
     MarkdownTextStyle,
     Color,
     TaskList,
@@ -102,9 +104,9 @@ export function createEditorExtensions() {
     TableRow,
     TableHeader,
     TableCell,
-    Image.configure({
+    createMarkdownImage(getDocumentPath).configure({
       inline: false,
-      allowBase64: false,
+      allowBase64: true,
     }),
     LinkReferenceDefinitionMaintain,
   ];

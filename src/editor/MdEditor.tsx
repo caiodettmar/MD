@@ -18,6 +18,7 @@ import {
 
 interface MdEditorProps {
   tabId: string;
+  documentPath: string | null;
   markdown: string;
   editable: boolean;
   wordWrap: boolean;
@@ -38,6 +39,7 @@ async function openExternalLink(href: string) {
 
 export function MdEditor({
   tabId,
+  documentPath,
   markdown,
   editable,
   wordWrap,
@@ -56,7 +58,12 @@ export function MdEditor({
   const onMarkdownChangeRef = useRef(onMarkdownChange);
   markdownRef.current = markdown;
   onMarkdownChangeRef.current = onMarkdownChange;
-  const extensions = useMemo(() => createEditorExtensions(), []);
+  const documentPathRef = useRef(documentPath);
+  documentPathRef.current = documentPath;
+  const extensions = useMemo(
+    () => createEditorExtensions(() => documentPathRef.current),
+    [],
+  );
 
   const handleLinkConfirm = useCallback(async (href: string) => {
     setPendingLink(null);

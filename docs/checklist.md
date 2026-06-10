@@ -63,8 +63,8 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Multi-color highlight | Selection toolbar swatches | Colored highlight serializes as `<mark style>` via `MarkdownHighlight`; default stays `==…==` |
 | ✅ | Emoji shortcode | `:name:` | gemoji lookup |
 | 🟡 | Emoji save mode | `config.emojiSaveMode` | Config stored; serialization not differentiated |
-| 🟡 | Subscript typing | Slash menu / toolbar | In `markRegistry`; `~` input rule deferred (conflicts with `~~` strikethrough) |
-| ✅ | Superscript typing | `^` | Input rule with footnote (`[^`) guard; also slash menu / toolbar |
+| ✅ | Subscript typing | Slash menu / toolbar | Raw pane serializes as `<sub>…</sub>`; `~` input rule deferred (conflicts with `~~` strikethrough) |
+| ✅ | Superscript typing | `^` | Input rule with footnote (`[^`) guard; raw pane serializes as `<sup>…</sup>`; also slash menu / toolbar |
 
 ---
 
@@ -80,8 +80,8 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Horizontal rule | `---` at line start | |
 | ✅ | Fenced code block | Slash menu / TipTap | Shiki highlighting |
 | ✅ | Fenced code + language | ` ```lang ` at line start | `inlineBlockTriggers.ts` |
-| 🟡 | Tables | Slash menu "Table" (3x3 + header) | Edit in WYSIWYG; no markdown line-start trigger |
-| 🟡 | Images | Slash menu "Image" → URL + alt dialog | No paste/drag-drop insert |
+| ✅ | Tables | Slash menu "Table" (3x3 + header) | WYSIWYG borders + resizable columns; no markdown line-start trigger |
+| ✅ | Images | Slash menu "Image" → URL/path dialog + local file picker (Tauri) | `convertFileSrc` for absolute paths; relative paths resolve from doc directory |
 | ⬜ | Definition lists | — | Not implemented |
 | ✅ | Paragraphs | Default | |
 
@@ -109,10 +109,11 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 |--------|------|-------|
 | ✅ | Appears on text selection | Custom portal toolbar (not static bar) |
 | ✅ | Bold / italic / strike / highlight / underline / code | Via `markRegistry` |
-| ✅ | Text color swatches | Preset colors + reset |
-| ✅ | Highlight color swatches | Presets + remove highlight button |
+| ✅ | Text color swatches | Popover in selection toolbar; preset colors + reset |
+| ✅ | Highlight color swatches | Popover in selection toolbar; presets + remove highlight |
 | ⬜ | Heading / list / quote actions | Spec mentioned Word-like bar; not implemented |
 | ✅ | Link edit / remove | Link button → `LinkEditDialog` (add/update/remove, optional title) |
+| ✅ | Selection toolbar overflow | Compact layout with color popovers; clamped positioning on narrow windows |
 
 ---
 
@@ -154,6 +155,7 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Markdown round-trip (editor ↔ string) | `@tiptap/markdown` |
 | ✅ | Markdown paste (plain text) | `markdownPaste.ts` |
 | ✅ | Colored text in raw pane | HTML span serialization |
+| ✅ | Subscript / superscript in raw pane | `<sub>` / `<sup>` HTML serialization; round-trip via markdown HTML parse |
 | 🟡 | Markdown Guide — basic syntax | Covered incl. images/links; escaping + raw HTML blocks out of scope |
 | 🟡 | Markdown Guide — extended syntax | Tables, tasks, strike, highlight, footnotes, sub/sup covered; definition lists missing |
 | 🟡 | Markdown Guide — hacks | Underline, sub/sup done; definition lists, indent tricks not planned |

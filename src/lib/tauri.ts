@@ -57,6 +57,25 @@ export async function pickOpenMarkdownPath(): Promise<string | null> {
   return Array.isArray(selected) ? selected[0] ?? null : selected;
 }
 
+export async function pickImageFilePath(): Promise<string | null> {
+  const selected = await open({
+    multiple: false,
+    directory: false,
+    filters: [
+      {
+        name: "Images",
+        extensions: ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico"],
+      },
+    ],
+  });
+
+  if (selected === null) {
+    return null;
+  }
+
+  return Array.isArray(selected) ? selected[0] ?? null : selected;
+}
+
 export async function pickSaveMarkdownPath(
   defaultPath?: string,
 ): Promise<string | null> {

@@ -1,19 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import type { Editor } from "@tiptap/react";
+import { isTauriRuntime, toDisplayImageSrc } from "../lib/imageSrc";
+import { pickImageFilePath } from "../lib/tauri";
 
 interface ImageInsertDialogProps {
   open: boolean;
   editor: Editor | null;
+  documentPath: string | null;
   onClose: () => void;
 }
 
 export function ImageInsertDialog({
   open,
   editor,
+  documentPath,
   onClose,
 }: ImageInsertDialogProps) {
   const [src, setSrc] = useState("");
   const [alt, setAlt] = useState("");
+  const [pickingFile, setPickingFile] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -28,18 +33,48 @@ export function ImageInsertDialog({
     return null;
   }
 
-  const insert = () => {
-    const trimmed = src.trim();
-    if (!trimmed || !editor) {
+  const insertImage = (markdownSrc: string, altText: string) => {
+    if (!markdownSrc.trim() || !editor) {
       return;
     }
 
+    const trimmedSrc = markdownSrc.trim();
     editor
       .chain()
       .focus()
-      .setImage({ src: trimmed, alt: alt.trim() || undefined })
+      .insertContent({
+        type: "image",
+        attrs: {
+          src: toDisplayImageSrc(trimmedSrc, documentPath),
+          alt: altText.trim() || null,
+          markdownSrc: trimmedSrc,
+        },
+      })
       .run();
     onClose();
+  };
+
+  const insert = () => {
+    insertImage(src, alt);
+  };
+
+  const browseLocalFile = async () => {
+    if (!isTauriRuntime()) {
+      return;
+    }
+
+    setPickingFile(true);
+    try {
+      const selected = await pickImageFilePath();
+      if (!selected) {
+        return;
+      }
+
+      setSrc(selected);
+      inputRef.current?.focus();
+    } finally {
+      setPickingFile(false);
+    }
   };
 
   return (
@@ -61,7 +96,7 @@ export function ImageInsertDialog({
       >
         <h2 id="image-insert-title">Insert image</h2>
         <label className="insert-dialog__field">
-          <span>Image URL</span>
+          <span>Image URL or file path</span>
           <input
             ref={inputRef}
             type="text"
@@ -70,6 +105,20 @@ export function ImageInsertDialog({
             onChange={(event) => setSrc(event.target.value)}
           />
         </label>
+        {isTauriRuntime() ? (
+          <div className="insert-dialog__actions insert-dialog__actions--inline">
+            <button
+              type="button"
+              className="is-secondary"
+              disabled={pickingFile}
+              onClick={() => {
+                void browseLocalFile();
+              }}
+            >
+              {pickingFile ? "Opening…" : "Browse local file…"}
+            </button>
+          </div>
+        ) : null}
         <label className="insert-dialog__field">
           <span>Alt text (optional)</span>
           <input
