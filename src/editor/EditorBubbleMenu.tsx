@@ -24,6 +24,8 @@ interface ToolbarPosition {
   left: number;
 }
 
+type ToolbarView = "main" | "headings" | "textColor" | "highlightColor";
+
 const TOOLBAR_VIEWPORT_PADDING = 8;
 
 function isMarkActive(editor: Editor, id: string): boolean {
@@ -93,77 +95,21 @@ function clampToolbarPosition(
   };
 }
 
-function ColorPopover({
-  title,
-  presets,
-  customColor,
-  onPick,
-  onClear,
-  clearLabel,
-}: {
-  title: string;
-  presets: typeof TEXT_COLOR_PRESETS;
-  customColor: string;
-  onPick: (color: string) => void;
-  onClear: () => void;
-  clearLabel: string;
-}) {
-  return (
-    <div className="selection-toolbar__popover" role="group" aria-label={title}>
-      <div className="selection-toolbar__popover-title">{title}</div>
-      <div className="selection-toolbar__swatches">
-        {presets.filter((preset) => preset.value).map((preset) => (
-          <button
-            key={preset.id}
-            type="button"
-            className="selection-toolbar__color"
-            title={preset.label}
-            style={{ backgroundColor: preset.value }}
-            onMouseDown={(event) => {
-              event.preventDefault();
-              onPick(preset.value);
-            }}
-          />
-        ))}
-      </div>
-      <label className="selection-toolbar__custom-color">
-        <span>Custom</span>
-        <input
-          type="color"
-          value={customColor}
-          aria-label={`${title} custom color`}
-          onMouseDown={(event) => event.preventDefault()}
-          onChange={(event) => onPick(event.target.value)}
-        />
-      </label>
-      <button
-        type="button"
-        className="selection-toolbar__button selection-toolbar__button--compact"
-        title={clearLabel}
-        onMouseDown={(event) => {
-          event.preventDefault();
-          onClear();
-        }}
-      >
-        {clearLabel}
-      </button>
-    </div>
-  );
-}
-
 export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
+  const [view, setView] = useState<ToolbarView>("main");
   const [position, setPosition] = useState<ToolbarPosition>({ top: 0, left: 0 });
-  const [textColorsOpen, setTextColorsOpen] = useState(false);
-  const [highlightColorsOpen, setHighlightColorsOpen] = useState(false);
-  const [headingsOpen, setHeadingsOpen] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkHref, setLinkHref] = useState("");
   const [linkTitle, setLinkTitle] = useState("");
   const [hasExistingLink, setHasExistingLink] = useState(false);
   const [customTextColor, setCustomTextColor] = useState("#2563eb");
   const [customHighlightColor, setCustomHighlightColor] = useState("#fde68a");
+
+  const resetView = useCallback(() => {
+    setView("main");
+  }, []);
 
   const openLinkDialog = useCallback(() => {
     const attrs = editor.getAttributes("link");
@@ -200,9 +146,7 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
     const anchor = getToolbarAnchor(editor);
     if (!anchor) {
       setVisible(false);
-      setTextColorsOpen(false);
-      setHighlightColorsOpen(false);
-      setHeadingsOpen(false);
+      resetView();
       return;
     }
 
@@ -224,7 +168,7 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
         ),
       );
     });
-  }, [editor]);
+  }, [editor, resetView]);
 
   useEffect(() => {
     const handleSelectionUpdate = () => {
@@ -233,9 +177,7 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
 
     const handleBlur = () => {
       setVisible(false);
-      setTextColorsOpen(false);
-      setHighlightColorsOpen(false);
-      setHeadingsOpen(false);
+      resetView();
     };
 
     syncToolbar();
@@ -246,7 +188,7 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
       editor.off("selectionUpdate", handleSelectionUpdate);
       editor.off("blur", handleBlur);
     };
-  }, [editor, syncToolbar]);
+  }, [editor, resetView, syncToolbar]);
 
   const linkDialog = (
     <LinkEditDialog
@@ -266,18 +208,23 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
 
   const activeTextColor = getActiveTextColor(editor);
 
-  return createPortal(
-    <div
-      ref={toolbarRef}
-      className="selection-toolbar"
-      style={{
-        position: "fixed",
-        top: `${position.top}px`,
-        left: `${position.left}px`,
-        transform: "translate(-50%, -100%)",
-        zIndex: 40,
+  const backButton = (
+    <button
+      type="button"
+      className="selection-toolbar__button"
+      title="Back"
+      aria-label="Back to formatting toolbar"
+      onMouseDown={(event) => {
+        event.preventDefault();
+        resetView();
       }}
     >
+      <ToolbarIcon id="back" />
+    </button>
+  );
+
+  const renderMainToolbar = () => (
+    <>
       {markRegistry.map((entry) => (
         <button
           key={entry.id}
@@ -296,79 +243,35 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
         </button>
       ))}
       <span className="selection-toolbar__divider" aria-hidden="true" />
-      <div className="selection-toolbar__group">
-        <button
-          type="button"
-          className={`selection-toolbar__button selection-toolbar__button--color ${
-            textColorsOpen ? "is-active" : ""
-          }`}
-          title="Text color"
-          aria-label="Text color"
-          onMouseDown={(event) => {
-            event.preventDefault();
-            setTextColorsOpen((open) => !open);
-            setHighlightColorsOpen(false);
-          }}
+      <button
+        type="button"
+        className="selection-toolbar__button selection-toolbar__button--color"
+        title="Text color"
+        aria-label="Text color"
+        onMouseDown={(event) => {
+          event.preventDefault();
+          setView("textColor");
+        }}
+      >
+        <span
+          className="selection-toolbar__text-color-glyph"
+          style={{ borderBottomColor: activeTextColor }}
         >
-          <span
-            className="selection-toolbar__text-color-glyph"
-            style={{ borderBottomColor: activeTextColor }}
-          >
-            A
-          </span>
-        </button>
-        {textColorsOpen ? (
-          <ColorPopover
-            title="Text color"
-            presets={TEXT_COLOR_PRESETS}
-            customColor={customTextColor}
-            onPick={(color) => {
-              setCustomTextColor(color);
-              editor.chain().focus().setColor(color).run();
-              setTextColorsOpen(false);
-            }}
-            onClear={() => {
-              editor.chain().focus().unsetColor().run();
-              setTextColorsOpen(false);
-            }}
-            clearLabel="Reset"
-          />
-        ) : null}
-      </div>
-      <div className="selection-toolbar__group">
-        <button
-          type="button"
-          className={`selection-toolbar__button ${
-            highlightColorsOpen ? "is-active" : ""
-          }`}
-          title="Highlight color"
-          aria-label="Highlight color"
-          onMouseDown={(event) => {
-            event.preventDefault();
-            setHighlightColorsOpen((open) => !open);
-            setTextColorsOpen(false);
-          }}
-        >
-          <ToolbarIcon id="highlightColor" />
-        </button>
-        {highlightColorsOpen ? (
-          <ColorPopover
-            title="Highlight color"
-            presets={HIGHLIGHT_COLOR_PRESETS}
-            customColor={customHighlightColor}
-            onPick={(color) => {
-              setCustomHighlightColor(color);
-              editor.chain().focus().setHighlight({ color }).run();
-              setHighlightColorsOpen(false);
-            }}
-            onClear={() => {
-              editor.chain().focus().unsetHighlight().run();
-              setHighlightColorsOpen(false);
-            }}
-            clearLabel="Clear"
-          />
-        ) : null}
-      </div>
+          A
+        </span>
+      </button>
+      <button
+        type="button"
+        className="selection-toolbar__button"
+        title="Highlight color"
+        aria-label="Highlight color"
+        onMouseDown={(event) => {
+          event.preventDefault();
+          setView("highlightColor");
+        }}
+      >
+        <ToolbarIcon id="highlightColor" />
+      </button>
       <span className="selection-toolbar__divider" aria-hidden="true" />
       <button
         type="button"
@@ -383,46 +286,20 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
         <ToolbarIcon id="clearFormatting" />
       </button>
       <span className="selection-toolbar__divider" aria-hidden="true" />
-      <div className="selection-toolbar__group">
-        <button
-          type="button"
-          className={`selection-toolbar__button ${
-            editor.isActive("heading") ? "is-active" : ""
-          }`}
-          title="Heading"
-          aria-label="Heading"
-          onMouseDown={(event) => {
-            event.preventDefault();
-            setHeadingsOpen((open) => !open);
-            setTextColorsOpen(false);
-            setHighlightColorsOpen(false);
-          }}
-        >
-          <ToolbarIcon id="heading" />
-        </button>
-        {headingsOpen ? (
-          <div className="selection-toolbar__popover" role="group" aria-label="Heading level">
-            {([1, 2, 3] as const).map((level) => (
-              <button
-                key={level}
-                type="button"
-                className={`selection-toolbar__button selection-toolbar__button--compact ${
-                  editor.isActive("heading", { level }) ? "is-active" : ""
-                }`}
-                title={`Heading ${level}`}
-                aria-label={`Heading ${level}`}
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                  editor.chain().focus().toggleHeading({ level }).run();
-                  setHeadingsOpen(false);
-                }}
-              >
-                H{level}
-              </button>
-            ))}
-          </div>
-        ) : null}
-      </div>
+      <button
+        type="button"
+        className={`selection-toolbar__button ${
+          editor.isActive("heading") ? "is-active" : ""
+        }`}
+        title="Heading"
+        aria-label="Heading"
+        onMouseDown={(event) => {
+          event.preventDefault();
+          setView("headings");
+        }}
+      >
+        <ToolbarIcon id="heading" />
+      </button>
       <button
         type="button"
         className={`selection-toolbar__button ${
@@ -508,6 +385,153 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
           <ToolbarIcon id="linkRemove" />
         </button>
       ) : null}
+    </>
+  );
+
+  const renderHeadingsToolbar = () => (
+    <>
+      {backButton}
+      {([1, 2, 3] as const).map((level) => (
+        <button
+          key={level}
+          type="button"
+          className={`selection-toolbar__button selection-toolbar__button--label ${
+            editor.isActive("heading", { level }) ? "is-active" : ""
+          }`}
+          title={`Heading ${level}`}
+          aria-label={`Heading ${level}`}
+          onMouseDown={(event) => {
+            event.preventDefault();
+            editor.chain().focus().toggleHeading({ level }).run();
+            resetView();
+          }}
+        >
+          H{level}
+        </button>
+      ))}
+    </>
+  );
+
+  const renderTextColorToolbar = () => (
+    <>
+      {backButton}
+      {TEXT_COLOR_PRESETS.filter((preset) => preset.value).map((preset) => (
+        <button
+          key={preset.id}
+          type="button"
+          className="selection-toolbar__color"
+          title={preset.label}
+          aria-label={preset.label}
+          style={{ backgroundColor: preset.value }}
+          onMouseDown={(event) => {
+            event.preventDefault();
+            setCustomTextColor(preset.value);
+            editor.chain().focus().setColor(preset.value).run();
+            resetView();
+          }}
+        />
+      ))}
+      <label className="selection-toolbar__custom-color">
+        <input
+          type="color"
+          value={customTextColor}
+          aria-label="Text color custom color"
+          onMouseDown={(event) => event.preventDefault()}
+          onChange={(event) => {
+            setCustomTextColor(event.target.value);
+            editor.chain().focus().setColor(event.target.value).run();
+          }}
+        />
+      </label>
+      <button
+        type="button"
+        className="selection-toolbar__button selection-toolbar__button--label"
+        title="Reset text color"
+        aria-label="Reset text color"
+        onMouseDown={(event) => {
+          event.preventDefault();
+          editor.chain().focus().unsetColor().run();
+          resetView();
+        }}
+      >
+        Reset
+      </button>
+    </>
+  );
+
+  const renderHighlightColorToolbar = () => (
+    <>
+      {backButton}
+      {HIGHLIGHT_COLOR_PRESETS.filter((preset) => preset.value).map((preset) => (
+        <button
+          key={preset.id}
+          type="button"
+          className="selection-toolbar__color"
+          title={preset.label}
+          aria-label={preset.label}
+          style={{ backgroundColor: preset.value }}
+          onMouseDown={(event) => {
+            event.preventDefault();
+            setCustomHighlightColor(preset.value);
+            editor.chain().focus().setHighlight({ color: preset.value }).run();
+            resetView();
+          }}
+        />
+      ))}
+      <label className="selection-toolbar__custom-color">
+        <input
+          type="color"
+          value={customHighlightColor}
+          aria-label="Highlight color custom color"
+          onMouseDown={(event) => event.preventDefault()}
+          onChange={(event) => {
+            setCustomHighlightColor(event.target.value);
+            editor.chain().focus().setHighlight({ color: event.target.value }).run();
+          }}
+        />
+      </label>
+      <button
+        type="button"
+        className="selection-toolbar__button selection-toolbar__button--label"
+        title="Clear highlight"
+        aria-label="Clear highlight"
+        onMouseDown={(event) => {
+          event.preventDefault();
+          editor.chain().focus().unsetHighlight().run();
+          resetView();
+        }}
+      >
+        Clear
+      </button>
+    </>
+  );
+
+  const renderToolbarContent = () => {
+    switch (view) {
+      case "headings":
+        return renderHeadingsToolbar();
+      case "textColor":
+        return renderTextColorToolbar();
+      case "highlightColor":
+        return renderHighlightColorToolbar();
+      default:
+        return renderMainToolbar();
+    }
+  };
+
+  return createPortal(
+    <div
+      ref={toolbarRef}
+      className="selection-toolbar"
+      style={{
+        position: "fixed",
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+        transform: "translate(-50%, -100%)",
+        zIndex: 40,
+      }}
+    >
+      {renderToolbarContent()}
       {linkDialog}
     </div>,
     document.body,

@@ -63,7 +63,7 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Multi-color highlight | Selection toolbar swatches | Colored highlight serializes as `<mark style>` via `MarkdownHighlight`; default stays `==…==` |
 | ✅ | Emoji shortcode | `:name:` | gemoji lookup |
 | 🟡 | Emoji save mode | `config.emojiSaveMode` | Config stored; serialization not differentiated |
-| ✅ | Subscript typing | `~` (guarded) / slash / toolbar | Raw pane serializes as `<sub>…</sub>`; single `~` disambiguated from `~~` strikethrough |
+| ✅ | Subscript typing | `~` (before-char guard) / slash / toolbar | Raw pane serializes as `<sub>…</sub>`; single `~` skips when preceded by `~` so `~~` stays strikethrough |
 | ✅ | Superscript typing | `^` | Input rule with footnote (`[^`) guard; raw pane serializes as `<sup>…</sup>`; also slash menu / toolbar |
 
 ---
@@ -80,7 +80,7 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 | ✅ | Horizontal rule | `---` at line start | |
 | ✅ | Fenced code block | Slash menu / TipTap | Shiki highlighting |
 | ✅ | Fenced code + language | ` ```lang ` at line start | `inlineBlockTriggers.ts` |
-| ✅ | Tables | `\| ` at line start / slash menu | 3×3 with header row; WYSIWYG borders + resizable columns |
+| ✅ | Tables | `\| ` at line start / slash menu | 3×3 with header row; WYSIWYG borders + resizable columns; multiline cells serialize as `<br>` in raw pane |
 | ✅ | Images | `![alt](url)` input rule / slash menu | URL/path dialog + local file picker (Tauri); relative paths via doc directory |
 | ✅ | Raw HTML images | `<img>` / `<picture>` in raw pane | Parsed into image nodes; round-trip via markdown or HTML with `data-md-src` |
 | ✅ | Definition lists | Slash menu / `: ` line-start | WYSIWYG `<dl>` styling; raw pane serializes as `<dl><dt><dd>` HTML |
@@ -111,12 +111,12 @@ Legend: ✅ Done · 🟡 Partial · ⬜ Not started
 |--------|------|-------|
 | ✅ | Appears on text selection | Custom portal toolbar (not static bar) |
 | ✅ | Bold / italic / strike / highlight / underline / code | Via `markRegistry` | SVG icons + tooltips |
-| ✅ | Text color swatches | Popover in selection toolbar | Presets, custom color input, reset |
-| ✅ | Highlight color swatches | Popover in selection toolbar | Presets, custom color input, clear highlight |
-| ✅ | Heading / list / quote actions | H1–H3 popover, bullet/ordered/task, blockquote icons |
-| ✅ | Remove formatting | Eraser icon → `unsetAllMarks().clearNodes()` |
+| ✅ | Text color swatches | Drill-down row in selection toolbar | Back arrow + preset circles + custom color + reset |
+| ✅ | Highlight color swatches | Drill-down row in selection toolbar | Back arrow + preset circles + custom color + clear |
+| ✅ | Heading / list / quote actions | Headings drill-down (H1–H3), bullet/ordered/task, blockquote icons |
+| ✅ | Remove formatting | A-with-strikethrough icon → `unsetAllMarks().clearNodes()` |
+| ✅ | Selection toolbar overflow | Single-row drill-down toolbar; circular icon buttons |
 | ✅ | Link edit / remove | Link + unlink icons → `LinkEditDialog` (add/update/remove, optional title) |
-| ✅ | Selection toolbar overflow | Single-row toolbar with horizontal scroll; strikethrough icon fixed |
 
 ---
 

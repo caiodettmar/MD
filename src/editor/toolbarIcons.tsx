@@ -14,6 +14,7 @@ export type ToolbarIconId =
   | "textColor"
   | "highlightColor"
   | "clearFormatting"
+  | "back"
   | "heading"
   | "bulletList"
   | "orderedList"
@@ -133,10 +134,17 @@ export function ToolbarIcon({ id, className }: ToolbarIconProps) {
     case "clearFormatting":
       return (
         <svg {...common}>
-          <path d="M18 4l2 2" />
-          <path d="M14.5 7.5L19 3" />
-          <path d="M3 21l8.5-8.5" />
-          <path d="M9 11l-6 6v3h3l6-6" />
+          <path d="M12 5l-5 14" />
+          <path d="M12 5l5 14" />
+          <path d="M8.5 14h7" />
+          <path d="M4 4l16 16" />
+        </svg>
+      );
+    case "back":
+      return (
+        <svg {...common}>
+          <path d="M19 12H5" />
+          <path d="M12 19l-7-7 7-7" />
         </svg>
       );
     case "heading":

@@ -845,8 +845,7 @@
   margin: 1.5rem 0;
 }
 
-.empty-state__actions button,
-.selection-toolbar__button {
+.empty-state__actions button {
   border: 0;
   border-radius: 999px;
   padding: 0.65rem 1rem;
@@ -876,40 +875,40 @@
   background: var(--bg-panel);
   box-shadow: var(--shadow);
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: hidden;
   scrollbar-width: thin;
 }
 
-.selection-toolbar__group {
-  position: relative;
-  display: flex;
+.selection-toolbar__button {
   flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--bg-muted);
+  color: var(--text);
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
 }
 
-.selection-toolbar__popover {
-  position: absolute;
-  top: calc(100% + 0.35rem);
-  left: 50%;
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.25rem;
-  width: max-content;
-  max-width: min(calc(100vw - 1rem), 220px);
-  padding: 0.35rem;
-  border: 1px solid var(--border);
-  border-radius: 0.65rem;
-  background: var(--bg-panel);
-  box-shadow: var(--shadow);
-  transform: translateX(-50%);
+.selection-toolbar__button svg {
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
-.selection-toolbar__button--compact {
-  min-width: auto;
-  padding: 0 0.5rem;
-  font-size: 0.72rem;
+.selection-toolbar__button--color {
+  width: 30px;
+  min-width: 30px;
+}
+
+.selection-toolbar__button--label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .selection-toolbar__button.is-active {
@@ -926,13 +925,13 @@
 }
 
 .selection-toolbar__color {
-  min-width: 28px;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 50%;
   padding: 0;
-  flex: 0 0 28px;
+  flex: 0 0 30px;
 }
 
 .slash-menu {
@@ -1071,72 +1070,33 @@
   color: white;
 }
 
-.selection-toolbar__button {
-  flex: 0 0 auto;
-  min-width: 30px;
-  height: 30px;
-  padding: 0 0.45rem;
-  border: 0;
-  border-radius: 0.45rem;
-  background: var(--bg-muted);
-  color: var(--text);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.selection-toolbar__button svg {
-  width: 16px;
-  height: 16px;
-  display: block;
-}
-
-.selection-toolbar__button--color {
-  min-width: 32px;
-}
-
 .selection-toolbar__text-color-glyph {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1rem;
-  font-size: 0.95rem;
+  width: 1rem;
+  font-size: 0.9rem;
   font-weight: 700;
   line-height: 1;
   border-bottom: 3px solid currentColor;
   padding-bottom: 1px;
 }
 
-.selection-toolbar__popover-title {
-  flex: 1 0 100%;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  padding: 0 0.15rem 0.1rem;
-}
-
-.selection-toolbar__swatches {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.25rem;
-}
-
 .selection-toolbar__custom-color {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.72rem;
-  color: var(--text-muted);
+  justify-content: center;
+  width: 30px;
+  height: 30px;
   cursor: pointer;
 }
 
 .selection-toolbar__custom-color input[type="color"] {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   padding: 0;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 50%;
   background: transparent;
   cursor: pointer;
 }

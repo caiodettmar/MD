@@ -41,10 +41,18 @@ export const MarkdownDelimiterMarks = Extension.create({
       toggleStoredMarkRule("highlight", "=="),
       toggleStoredMarkRule("code", "`"),
       new InputRule({
-        find: /(?<!~)~(?!~)$/,
+        find: /~$/,
         handler: ({ state, range }) => {
           const markType = state.schema.marks.subscript;
           if (!markType) {
+            return null;
+          }
+
+          const before = state.doc.textBetween(
+            Math.max(0, range.from - 1),
+            range.from,
+          );
+          if (before === "~") {
             return null;
           }
 
