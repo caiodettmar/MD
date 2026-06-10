@@ -13,6 +13,7 @@ import type { Editor } from "@tiptap/react";
 import { EMOJI_PRESETS } from "../editor/constants/emojiPresets";
 import { isInsideLinkReferenceDefinition } from "../editor/linkReferenceDefinitionUtils";
 import { markRegistry } from "../editor/markRegistry";
+import { useEditorStore } from "../stores/editorStore";
 
 interface SlashMenuProps {
   editor: Editor;
@@ -87,6 +88,27 @@ const blockItems = [
     hint: "---",
     keywords: ["hr", "divider", "rule"],
     run: (e: Editor) => e.chain().focus().setHorizontalRule().run(),
+  },
+  {
+    id: "block-table",
+    label: "Table",
+    hint: "3×3",
+    keywords: ["table", "grid"],
+    run: (e: Editor) =>
+      e
+        .chain()
+        .focus()
+        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+        .run(),
+  },
+  {
+    id: "block-image",
+    label: "Image",
+    hint: "img",
+    keywords: ["image", "img", "picture"],
+    run: () => {
+      useEditorStore.getState().setImageDialogOpen(true);
+    },
   },
 ];
 

@@ -13,6 +13,14 @@ export const TEXT_COLOR_PRESETS: ColorPreset[] = [
   { id: "purple", label: "Purple", value: "#9333ea" },
 ];
 
+export const HIGHLIGHT_COLOR_PRESETS: ColorPreset[] = [
+  { id: "default", label: "Default", value: "" },
+  { id: "yellow", label: "Yellow", value: "#fde68a" },
+  { id: "green", label: "Green", value: "#bbf7d0" },
+  { id: "blue", label: "Blue", value: "#bfdbfe" },
+  { id: "pink", label: "Pink", value: "#fbcfe8" },
+];
+
 export function getDefaultHighlightColor(): string {
   return getComputedStyle(document.documentElement)
     .getPropertyValue("--highlight-bg")

@@ -56,6 +56,20 @@ export const markRegistry: MarkRegistryEntry[] = [
     slashKeywords: ["code", "inline"],
     run: (editor) => editor.chain().focus().toggleCode().run(),
   },
+  {
+    id: "subscript",
+    label: "Subscript",
+    shortcutLabel: "x₂",
+    slashKeywords: ["sub", "subscript"],
+    run: (editor) => editor.chain().focus().toggleSubscript().run(),
+  },
+  {
+    id: "superscript",
+    label: "Superscript",
+    shortcutLabel: "x²",
+    slashKeywords: ["sup", "superscript"],
+    run: (editor) => editor.chain().focus().toggleSuperscript().run(),
+  },
 ];
 
 export function findRegistryEntry(query: string): MarkRegistryEntry[] {

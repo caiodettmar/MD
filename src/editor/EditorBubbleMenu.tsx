@@ -2,7 +2,11 @@ import { isTextSelection, posToDOMRect } from "@tiptap/core";
 import type { Editor } from "@tiptap/react";
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { TEXT_COLOR_PRESETS } from "./constants/colors";
+import { LinkEditDialog } from "../components/LinkEditDialog";
+import {
+  HIGHLIGHT_COLOR_PRESETS,
+  TEXT_COLOR_PRESETS,
+} from "./constants/colors";
 import { markRegistry } from "./markRegistry";
 
 interface EditorBubbleMenuProps {
@@ -28,6 +32,10 @@ function isMarkActive(editor: Editor, id: string): boolean {
       return editor.isActive("underline");
     case "code":
       return editor.isActive("code");
+    case "subscript":
+      return editor.isActive("subscript");
+    case "superscript":
+      return editor.isActive("superscript");
     default:
       return false;
   }
@@ -64,6 +72,37 @@ function getToolbarPosition(editor: Editor): ToolbarPosition | null {
 export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
   const [visible, setVisible] = useState(false);
   const [position, setPosition] = useState<ToolbarPosition>({ top: 0, left: 0 });
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [linkHref, setLinkHref] = useState("");
+  const [linkTitle, setLinkTitle] = useState("");
+  const [hasExistingLink, setHasExistingLink] = useState(false);
+
+  const openLinkDialog = useCallback(() => {
+    const attrs = editor.getAttributes("link");
+    const existing = editor.isActive("link");
+    setLinkHref(typeof attrs.href === "string" ? attrs.href : "");
+    setLinkTitle(typeof attrs.title === "string" ? attrs.title : "");
+    setHasExistingLink(existing);
+    setLinkDialogOpen(true);
+  }, [editor]);
+
+  const applyLink = useCallback(
+    (href: string, title: string) => {
+      editor
+        .chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({ href, title: title || null })
+        .run();
+      setLinkDialogOpen(false);
+    },
+    [editor],
+  );
+
+  const removeLink = useCallback(() => {
+    editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    setLinkDialogOpen(false);
+  }, [editor]);
 
   const syncToolbar = useCallback(() => {
     const nextPosition = getToolbarPosition(editor);
@@ -95,8 +134,20 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
     };
   }, [editor, syncToolbar]);
 
+  const linkDialog = (
+    <LinkEditDialog
+      open={linkDialogOpen}
+      initialHref={linkHref}
+      initialTitle={linkTitle}
+      hasExistingLink={hasExistingLink}
+      onApply={applyLink}
+      onRemove={removeLink}
+      onClose={() => setLinkDialogOpen(false)}
+    />
+  );
+
   if (!visible) {
-    return null;
+    return linkDialogOpen ? createPortal(linkDialog, document.body) : null;
   }
 
   return createPortal(
@@ -151,6 +202,52 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
       >
         A
       </button>
+      <span className="selection-toolbar__divider" aria-hidden="true" />
+      {HIGHLIGHT_COLOR_PRESETS.filter((preset) => preset.value).map(
+        (preset) => (
+          <button
+            key={`hl-${preset.id}`}
+            type="button"
+            className="selection-toolbar__color"
+            title={`Highlight: ${preset.label}`}
+            style={{ backgroundColor: preset.value }}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              editor
+                .chain()
+                .focus()
+                .setHighlight({ color: preset.value })
+                .run();
+            }}
+          />
+        ),
+      )}
+      <button
+        type="button"
+        className="selection-toolbar__button"
+        title="Remove highlight"
+        onMouseDown={(event) => {
+          event.preventDefault();
+          editor.chain().focus().unsetHighlight().run();
+        }}
+      >
+        ⊘
+      </button>
+      <span className="selection-toolbar__divider" aria-hidden="true" />
+      <button
+        type="button"
+        className={`selection-toolbar__button ${
+          editor.isActive("link") ? "is-active" : ""
+        }`}
+        title={editor.isActive("link") ? "Edit link" : "Add link"}
+        onMouseDown={(event) => {
+          event.preventDefault();
+          openLinkDialog();
+        }}
+      >
+        ://
+      </button>
+      {linkDialog}
     </div>,
     document.body,
   );

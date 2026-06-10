@@ -1,6 +1,5 @@
 import Bold from "@tiptap/extension-bold";
 import Code from "@tiptap/extension-code";
-import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
 import Italic from "@tiptap/extension-italic";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -28,6 +27,7 @@ import { LinkReferenceMarkdownParser } from "./linkReferenceMarkdownParser";
 import { MarkdownLink } from "./markdownLink";
 import { MarkdownPaste } from "./markdownPaste";
 import { MarkdownDelimiterMarks } from "./markdownDelimiterMarks";
+import { MarkdownHighlight } from "./markdownHighlight";
 import { MarkdownTextStyle } from "./markdownTextStyle";
 import { ShikiCodeBlock } from "./shikiCodeBlockExtension";
 
@@ -79,7 +79,7 @@ export function createEditorExtensions() {
     }),
     LinkClickGuard,
     Underline,
-    Highlight.configure({
+    MarkdownHighlight.configure({
       multicolor: true,
       HTMLAttributes: {
         class: "md-highlight",
