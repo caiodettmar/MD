@@ -148,24 +148,27 @@ const PRINT_STYLES = `
   }
 
   /* Nested ordered lists */
-  ol {
+  ol:not(.md-toc__list) {
     counter-reset: ol-item;
     list-style: none !important;
     padding-left: 1.5rem;
     margin: 0.5rem 0;
   }
-  ol > li {
+  ol:not(.md-toc__list) > li:not(.md-toc__item) {
     counter-increment: ol-item;
     list-style: none !important;
   }
-  ol > li::before {
+  ol:not(.md-toc__list) > li:not(.md-toc__item)::before {
     content: counters(ol-item, ".") ". ";
     color: #6b7280;
     margin-right: 0.35rem;
     display: inline-block;
   }
-  ol li ol > li::before {
+  ol:not(.md-toc__list) li ol:not(.md-toc__list) > li:not(.md-toc__item)::before {
     content: counters(ol-item, ".") " ";
+  }
+  ol:not(.md-toc__list) > li:not(.md-toc__item) > p:first-child {
+    display: inline;
   }
 
   /* Footnotes */

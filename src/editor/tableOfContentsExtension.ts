@@ -9,7 +9,7 @@ import { TableOfContentsView } from "./TableOfContentsView";
 /** Markdown convention: a single mixed-case `[ToC]` line represents this block. */
 export const TOC_MARKDOWN_MARKER = "[ToC]";
 
-const TOC_LIST_LINE_RE = /^(\s*)-\s+\[([^\]]+)\]\(#([^)]+)\)\s*$/;
+const TOC_LIST_LINE_RE = /^(\s*)(?:-\s+|\d+\.\s+)\[([^\]]+)\]\(#([^)]+)\)\s*$/;
 
 function tocIndentLevel(indent: string): number {
   return Math.min(3, Math.floor(indent.length / 2) + 1);
@@ -47,10 +47,21 @@ export function renderTocMarkdown(entries: TocEntry[]): string {
     return marker;
   }
 
+  const counters: number[] = [];
   const list = entries
     .map((entry) => {
-      const indent = "  ".repeat(Math.max(0, entry.level - 1));
-      return `${indent}- [${entry.text}](#${entry.anchor})`;
+      const level = entry.level;
+      while (counters.length > level) {
+        counters.pop();
+      }
+      while (counters.length < level) {
+        counters.push(0);
+      }
+      counters[level - 1]++;
+
+      const num = counters[level - 1];
+      const indent = "  ".repeat(Math.max(0, level - 1));
+      return `${indent}${num}. [${entry.text}](#${entry.anchor})`;
     })
     .join("\n");
   return `${marker}\n${list}\n[/ToC]`;

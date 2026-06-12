@@ -62,9 +62,24 @@ describe("Markdown Roundtrip Integration Tests", () => {
     const output = editor.getMarkdown().trim();
     
     // The TOC entry for "Section 1:" should have trailing colon stripped
-    expect(output).toContain("- [Section 1](#section-1)");
-    expect(output).toContain("- [Section 1.1](#section-1.1)");
+    expect(output).toContain("1. [Section 1](#section-1)");
+    expect(output).toContain("1. [Section 1.1](#section-1.1)");
     expect(output).toContain("[ToC]");
+    expect(output).toContain("[/ToC]");
+
+    editor.destroy();
+  });
+
+  it("should parse legacy bullet-point TOC and serialize it as a numbered list TOC", () => {
+    const editor = createTestEditor();
+
+    const markdownInput = "[ToC]\n- [To do](#to-do)\n- [Done](#done)\n[/ToC]\n\n# To do\n\n# Done";
+    editor.commands.setContent(markdownInput, { contentType: "markdown" });
+
+    const output = editor.getMarkdown().trim();
+    expect(output).toContain("[ToC]");
+    expect(output).toContain("1. [To do](#to-do)");
+    expect(output).toContain("2. [Done](#done)");
     expect(output).toContain("[/ToC]");
 
     editor.destroy();

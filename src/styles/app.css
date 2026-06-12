@@ -971,19 +971,19 @@
   color: var(--highlight-fg);
 }
 
-.md-editor-surface ol {
+.md-editor-surface ol:not(.md-toc__list) {
   counter-reset: ol-item;
   list-style: none !important;
   padding-left: 1.5rem;
   margin: 0.75rem 0;
 }
 
-.md-editor-surface ol > li {
+.md-editor-surface ol:not(.md-toc__list) > li:not(.md-toc__item) {
   counter-increment: ol-item;
   list-style: none !important;
 }
 
-.md-editor-surface ol > li::before {
+.md-editor-surface ol:not(.md-toc__list) > li:not(.md-toc__item)::before {
   content: counters(ol-item, ".") ". ";
   font-weight: normal;
   color: var(--text-muted);
@@ -991,8 +991,12 @@
   display: inline-block;
 }
 
-.md-editor-surface ol li ol > li::before {
+.md-editor-surface ol:not(.md-toc__list) li ol:not(.md-toc__list) > li:not(.md-toc__item)::before {
   content: counters(ol-item, ".") " ";
+}
+
+.md-editor-surface ol:not(.md-toc__list) > li:not(.md-toc__item) > p:first-child {
+  display: inline;
 }
 
 .md-editor-surface ul[data-type="taskList"] {
