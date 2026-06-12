@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7B5FFF"/>
+      <stop offset="100%" stop-color="#6244FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="256" cy="256" r="256" fill="url(#bg)"/>
+  <!-- M and D as paths for pixel-perfect centering -->
+  <g fill="#FFFFFF">
+    <!-- Letter M -->
+    <path d="M80,355 V157 h40 l66,120 66,-120 h40 v198 h-36 V210 l-62,112 h-16 L116,210 v145 z"/>
+    <!-- Letter D -->
+    <path d="M320,157 h56 q90,0 90,99 q0,99 -90,99 h-56 z m36,34 v164 h24 q56,0 56,-82 q0,-82 -56,-82 z"/>
+  </g>
+</svg>
