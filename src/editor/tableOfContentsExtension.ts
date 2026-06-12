@@ -41,18 +41,16 @@ export function computeTocNumbers(entries: TocEntry[]): string[] {
 
   return numbers;
 }
-
 export function renderTocMarkdown(entries: TocEntry[]): string {
   const marker = "[ToC]";
   if (entries.length === 0) {
     return marker;
   }
 
-  const numbers = computeTocNumbers(entries);
   const list = entries
-    .map((entry, index) => {
+    .map((entry) => {
       const indent = "  ".repeat(Math.max(0, entry.level - 1));
-      return `${indent}- [${numbers[index]} ${entry.text}](#${entry.anchor})`;
+      return `${indent}- [${entry.text}](#${entry.anchor})`;
     })
     .join("\n");
   return `${marker}\n${list}\n[/ToC]`;
@@ -92,6 +90,50 @@ export function scanDocumentHeadings(doc: ProseMirrorNode): TocEntry[] {
   });
 
   return entries;
+}
+
+export interface TocTreeNode {
+  entry?: TocEntry;
+  children: TocTreeNode[];
+}
+
+export function buildTocTree(entries: TocEntry[]): TocTreeNode {
+  const root: TocTreeNode = { children: [] };
+  const stack: { node: TocTreeNode; level: number }[] = [{ node: root, level: 0 }];
+
+  for (const entry of entries) {
+    const level = entry.level;
+
+    while (stack.length > 1 && stack[stack.length - 1].level >= level) {
+      stack.pop();
+    }
+
+    const parentNode = stack[stack.length - 1].node;
+    const newNode: TocTreeNode = { entry, children: [] };
+    parentNode.children.push(newNode);
+    stack.push({ node: newNode, level });
+  }
+
+  return root;
+}
+
+function renderTocTreeHTML(nodes: TocTreeNode[]): any[] {
+  if (nodes.length === 0) {
+    return [];
+  }
+
+  const listItems = nodes.map((node) => {
+    const entry = node.entry!;
+    const itemChildren: any[] = [
+      ["a", { class: "md-toc__link", href: `#${entry.anchor}` }, entry.text]
+    ];
+    if (node.children.length > 0) {
+      itemChildren.push(renderTocTreeHTML(node.children));
+    }
+    return ["li", { class: "md-toc__item" }, ...itemChildren];
+  });
+
+  return ["ol", { class: "md-toc__list" }, ...listItems];
 }
 
 export const TableOfContents = Node.create({
@@ -153,7 +195,6 @@ export const TableOfContents = Node.create({
   renderHTML({ node, HTMLAttributes }) {
     const entries = (node.attrs.entries as TocEntry[] | undefined) ?? [];
     const collapsed = !!node.attrs.collapsed;
-    const numbers = computeTocNumbers(entries);
 
     const children: any[] = [];
 
@@ -171,12 +212,8 @@ export const TableOfContents = Node.create({
 
     // List of items
     if (!collapsed && entries.length > 0) {
-      const listItems = entries.map((entry, index) => [
-        "li",
-        { class: `md-toc__item md-toc__item--h${entry.level}` },
-        ["a", { class: "md-toc__link", href: `#${entry.anchor}` }, `${numbers[index]} ${entry.text}`]
-      ]);
-      children.push(["ol", { class: "md-toc__list" }, ...listItems]);
+      const tree = buildTocTree(entries);
+      children.push(renderTocTreeHTML(tree.children));
     } else if (entries.length === 0) {
       children.push(["p", { class: "md-toc__empty" }, "No headings yet — add H1–H6, then Update ToC."]);
     }

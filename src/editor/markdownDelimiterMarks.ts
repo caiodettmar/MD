@@ -51,6 +51,27 @@ export const MarkdownDelimiterMarks = Extension.create({
         find: /(?:^|\s)(\^(?!\s)((?:[^^]+))\^(?!\s))$/,
         type: schema.marks.superscript,
       }),
+      // Italic shortcut toggle via _ + space
+      new InputRule({
+        find: /_ $/,
+        handler: ({ state, range }) => {
+          const markType = schema.marks.italic;
+          if (!markType) {
+            return null;
+          }
+
+          const { tr } = state;
+          tr.delete(range.from, range.to);
+
+          const activeMarks =
+            state.storedMarks ?? state.selection.$from.marks();
+          if (markType.isInSet(activeMarks)) {
+            tr.removeStoredMark(markType);
+          } else {
+            tr.addStoredMark(markType.create());
+          }
+        },
+      }),
 
       // Table spawning input rule (e.g. |*3 )
       new InputRule({

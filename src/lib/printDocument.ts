@@ -121,31 +121,26 @@ const PRINT_STYLES = `
     display: none !important;
   }
   .md-toc__list {
-    margin: 0;
-    padding-left: 0;
+    counter-reset: toc-item;
     list-style: none !important;
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+  .md-toc > .md-toc__list {
+    padding-left: 0;
   }
   .md-toc__item {
+    counter-increment: toc-item;
     margin: 0.25rem 0;
     list-style: none !important;
   }
-  .md-toc__item--h1 {
-    margin-left: 0;
+  .md-toc__link::before {
+    content: counters(toc-item, ".") " ";
+    font-weight: 500;
+    margin-right: 0.25rem;
   }
-  .md-toc__item--h2 {
-    margin-left: 0.75rem;
-  }
-  .md-toc__item--h3 {
-    margin-left: 1.5rem;
-  }
-  .md-toc__item--h4 {
-    margin-left: 2.25rem;
-  }
-  .md-toc__item--h5 {
-    margin-left: 3rem;
-  }
-  .md-toc__item--h6 {
-    margin-left: 3.75rem;
+  .md-toc > .md-toc__list > .md-toc__item > .md-toc__link::before {
+    content: counters(toc-item, ".") ". ";
   }
   .md-toc__link {
     color: #2563eb;

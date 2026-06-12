@@ -2,9 +2,45 @@ import { NodeViewWrapper } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/react";
 import {
   scanDocumentHeadings,
-  computeTocNumbers,
+  buildTocTree,
   type TocEntry,
+  type TocTreeNode,
 } from "./tableOfContentsExtension";
+
+function RenderTocTree({ nodes, editor }: { nodes: TocTreeNode[]; editor: any }) {
+  if (nodes.length === 0) {
+    return null;
+  }
+
+  return (
+    <ol className="md-toc__list">
+      {nodes.map((node) => {
+        const entry = node.entry!;
+        return (
+          <li
+            key={`${entry.anchor}-${entry.level}-${entry.text}`}
+            className="md-toc__item"
+          >
+            <a
+              href={`#${entry.anchor}`}
+              className="md-toc__link"
+              onClick={(event) => {
+                event.preventDefault();
+                const target = editor.view.dom.querySelector(
+                  `#${CSS.escape(entry.anchor)}`,
+                );
+                target?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            >
+              {entry.text}
+            </a>
+            <RenderTocTree nodes={node.children} editor={editor} />
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
 
 export function TableOfContentsView({
   node,
@@ -57,31 +93,7 @@ export function TableOfContentsView({
         </div>
         {!collapsed ? (
           entries.length > 0 ? (
-            <ol className="md-toc__list">
-              {(() => {
-                const numbers = computeTocNumbers(entries);
-                return entries.map((entry, index) => (
-                  <li
-                    key={`${entry.anchor}-${entry.level}-${entry.text}`}
-                    className={`md-toc__item md-toc__item--h${entry.level}`}
-                  >
-                    <a
-                      href={`#${entry.anchor}`}
-                      className="md-toc__link"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        const target = editor.view.dom.querySelector(
-                          `#${CSS.escape(entry.anchor)}`,
-                        );
-                        target?.scrollIntoView({ behavior: "smooth", block: "start" });
-                      }}
-                    >
-                      {numbers[index]} {entry.text}
-                    </a>
-                  </li>
-                ));
-              })()}
-            </ol>
+            <RenderTocTree nodes={buildTocTree(entries).children} editor={editor} />
           ) : (
             <p className="md-toc__empty">No headings yet — add H1–H6, then Update ToC.</p>
           )

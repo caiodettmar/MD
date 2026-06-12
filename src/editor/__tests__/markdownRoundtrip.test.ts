@@ -61,9 +61,9 @@ describe("Markdown Roundtrip Integration Tests", () => {
 
     const output = editor.getMarkdown().trim();
     
-    // The TOC entry for "Section 1:" should have trailing colon stripped and hierarchical numbers prepended
-    expect(output).toContain("- [1.1 Section 1](#section-1)");
-    expect(output).toContain("- [1.1.1 Section 1.1](#section-1.1)");
+    // The TOC entry for "Section 1:" should have trailing colon stripped
+    expect(output).toContain("- [Section 1](#section-1)");
+    expect(output).toContain("- [Section 1.1](#section-1.1)");
     expect(output).toContain("[ToC]");
     expect(output).toContain("[/ToC]");
 
