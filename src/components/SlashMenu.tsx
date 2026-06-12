@@ -417,41 +417,6 @@ export function SlashMenu({ editor }: SlashMenuProps) {
 
     const menuItems: SlashMenuItem[] = [];
 
-    const marks = markRegistry
-      .map((entry) => ({
-        entry,
-        score: scoreSlashMatch(filterQuery, entry.label, entry.slashKeywords),
-      }))
-      .filter(({ score }) => score >= 0)
-      .sort((left, right) => right.score - left.score);
-
-    marks.forEach(({ entry }, index) => {
-      const key = `mark-${entry.id}`;
-      const icon = getSlashIcon(key);
-      menuItems.push({
-        key,
-        section: index === 0 ? "Formatting" : undefined,
-        className: "slash-menu__item",
-        content: (
-          <>
-            <span className="slash-menu__item-left">
-              {icon && (
-                <span className="material-symbols-outlined slash-menu__item-icon">
-                  {icon}
-                </span>
-              )}
-              <span className="slash-menu__label">{entry.label}</span>
-            </span>
-            <span className="slash-menu__hint">{entry.shortcutLabel ?? ""}</span>
-          </>
-        ),
-        run: () => {
-          removeSlashTrigger(editor);
-          entry.run(editor);
-        },
-      });
-    });
-
     const blocks = blockItems
       .map((entry) => ({
         entry,
@@ -548,6 +513,41 @@ export function SlashMenu({ editor }: SlashMenuProps) {
         run: () => setShowEmojiPanel(true),
       });
     }
+
+    const marks = markRegistry
+      .map((entry) => ({
+        entry,
+        score: scoreSlashMatch(filterQuery, entry.label, entry.slashKeywords),
+      }))
+      .filter(({ score }) => score >= 0)
+      .sort((left, right) => right.score - left.score);
+
+    marks.forEach(({ entry }, index) => {
+      const key = `mark-${entry.id}`;
+      const icon = getSlashIcon(key);
+      menuItems.push({
+        key,
+        section: index === 0 ? "Formatting" : undefined,
+        className: "slash-menu__item",
+        content: (
+          <>
+            <span className="slash-menu__item-left">
+              {icon && (
+                <span className="material-symbols-outlined slash-menu__item-icon">
+                  {icon}
+                </span>
+              )}
+              <span className="slash-menu__label">{entry.label}</span>
+            </span>
+            <span className="slash-menu__hint">{entry.shortcutLabel ?? ""}</span>
+          </>
+        ),
+        run: () => {
+          removeSlashTrigger(editor);
+          entry.run(editor);
+        },
+      });
+    });
 
     return menuItems;
   }, [editor, emojiMode, filterQuery, menuOpen]);

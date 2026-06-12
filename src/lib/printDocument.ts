@@ -122,19 +122,30 @@ const PRINT_STYLES = `
   }
   .md-toc__list {
     margin: 0;
-    padding-left: 1.25rem;
+    padding-left: 0;
+    list-style: none !important;
   }
   .md-toc__item {
     margin: 0.25rem 0;
-    list-style-type: decimal;
+    list-style: none !important;
+  }
+  .md-toc__item--h1 {
+    margin-left: 0;
   }
   .md-toc__item--h2 {
     margin-left: 0.75rem;
-    list-style-type: circle;
   }
   .md-toc__item--h3 {
     margin-left: 1.5rem;
-    list-style-type: square;
+  }
+  .md-toc__item--h4 {
+    margin-left: 2.25rem;
+  }
+  .md-toc__item--h5 {
+    margin-left: 3rem;
+  }
+  .md-toc__item--h6 {
+    margin-left: 3.75rem;
   }
   .md-toc__link {
     color: #2563eb;

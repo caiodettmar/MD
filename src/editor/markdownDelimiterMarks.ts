@@ -1,46 +1,58 @@
-import { Extension, InputRule } from "@tiptap/core";
+import { Extension, InputRule, markInputRule } from "@tiptap/core";
 import { nameToEmoji } from "gemoji";
-
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function toggleStoredMarkRule(markName: string, delimiter: string) {
-  return new InputRule({
-    find: new RegExp(`${escapeRegex(delimiter)}$`),
-    handler: ({ state, range }) => {
-      const markType = state.schema.marks[markName];
-      if (!markType) {
-        return null;
-      }
-
-      const { tr } = state;
-      tr.delete(range.from, range.to);
-
-      const activeMarks =
-        state.storedMarks ?? state.selection.$from.marks();
-      const isActive = markType.isInSet(activeMarks);
-
-      if (isActive) {
-        tr.removeStoredMark(markType);
-      } else {
-        tr.addStoredMark(markType.create());
-      }
-    },
-  });
-}
 
 export const MarkdownDelimiterMarks = Extension.create({
   name: "markdownDelimiterMarks",
 
   addInputRules() {
+    const { schema } = this.editor;
     return [
-      toggleStoredMarkRule("bold", "**"),
-      toggleStoredMarkRule("italic", "*"),
-      toggleStoredMarkRule("underline", "___"),
-      toggleStoredMarkRule("strike", "~~"),
-      toggleStoredMarkRule("highlight", "=="),
-      toggleStoredMarkRule("code", "`"),
+      // Bold (using ** or __)
+      markInputRule({
+        find: /(?:^|\s)(\*\*(?!\s)((?:[^*]+))\*\*(?!\s))$/,
+        type: schema.marks.bold,
+      }),
+      markInputRule({
+        find: /(?:^|\s)(__(?!\s)((?:[^_]+))__(?!\s))$/,
+        type: schema.marks.bold,
+      }),
+      // Underline (using ___). Must be defined before Italic (_) to match first.
+      markInputRule({
+        find: /(?:^|\s)(___(?!\s)((?:(?!___)[^_])+)(?<!\s)___)$/,
+        type: schema.marks.underline,
+      }),
+      // Italic (using _ only, removing * to prevent list conflicts)
+      markInputRule({
+        find: /(?:^|\s)(_(?!\s)((?:[^_]+))_(?!\s))$/,
+        type: schema.marks.italic,
+      }),
+      // Strikethrough (using ~~)
+      markInputRule({
+        find: /(?:^|\s)(~~(?!\s)((?:[^~]+))~~(?!\s))$/,
+        type: schema.marks.strike,
+      }),
+      // Highlight (using ==)
+      markInputRule({
+        find: /(?:^|\s)(==(?!\s)((?:[^=]+))==(?!\s))$/,
+        type: schema.marks.highlight,
+      }),
+      // Inline code (using `)
+      markInputRule({
+        find: /(?:^|\s)(`(?!\s)((?:[^`]+))`(?!\s))$/,
+        type: schema.marks.code,
+      }),
+      // Subscript (using ~)
+      markInputRule({
+        find: /(?:^|\s)(~(?!\s)((?:[^~]+))~(?!\s))$/,
+        type: schema.marks.subscript,
+      }),
+      // Superscript (using ^)
+      markInputRule({
+        find: /(?:^|\s)(\^(?!\s)((?:[^^]+))\^(?!\s))$/,
+        type: schema.marks.superscript,
+      }),
+
+      // Table spawning input rule (e.g. |*3 )
       new InputRule({
         find: /^\|\*(\d+)\s$/,
         handler: ({ state, range, match }) => {
@@ -58,66 +70,8 @@ export const MarkdownDelimiterMarks = Extension.create({
           }, 0);
         },
       }),
-      // Subscript via `~ ` (tilde + space). Space avoids bare `~` in words;
-      // guard skips `~~` strikethrough. Same trigger toggles stored mark off.
-      new InputRule({
-        find: /~ $/,
-        handler: ({ state, range }) => {
-          const markType = state.schema.marks.subscript;
-          if (!markType) {
-            return null;
-          }
 
-          const tildeFrom = range.from;
-          const before = state.doc.textBetween(
-            Math.max(0, tildeFrom - 1),
-            tildeFrom,
-          );
-          if (before === "~") {
-            return null;
-          }
-
-          const { tr } = state;
-          tr.delete(range.from, range.to);
-
-          const activeMarks =
-            state.storedMarks ?? state.selection.$from.marks();
-          if (markType.isInSet(activeMarks)) {
-            tr.removeStoredMark(markType);
-          } else {
-            tr.addStoredMark(markType.create());
-          }
-        },
-      }),
-      // Superscript via ^ delimiter. Guarded so typing footnote syntax [^id]
-      // does not toggle superscript.
-      new InputRule({
-        find: /\^$/,
-        handler: ({ state, range }) => {
-          const markType = state.schema.marks.superscript;
-          if (!markType) {
-            return null;
-          }
-
-          const before = state.doc.textBetween(
-            Math.max(0, range.from - 1),
-            range.from,
-          );
-          if (before === "[") {
-            return null;
-          }
-
-          const { tr } = state;
-          tr.delete(range.from, range.to);
-
-          const activeMarks = state.storedMarks ?? state.selection.$from.marks();
-          if (markType.isInSet(activeMarks)) {
-            tr.removeStoredMark(markType);
-          } else {
-            tr.addStoredMark(markType.create());
-          }
-        },
-      }),
+      // Emoji shortcode input rule (e.g. :smile:)
       new InputRule({
         find: /:([a-z0-9_+-]+):$/,
         handler: ({ state, range, match }) => {
@@ -142,3 +96,4 @@ export const MarkdownDelimiterMarks = Extension.create({
 export function resolveEmojiShortcode(name: string): string | null {
   return nameToEmoji[name.toLowerCase()] ?? null;
 }
+

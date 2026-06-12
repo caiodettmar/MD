@@ -273,9 +273,11 @@ export const TableOfContents = Node.create({
           break;
         }
 
+        const rawText = itemMatch[2];
+        const cleanText = rawText.replace(/^\d+(?:\.\d+)*\s+/, "");
         entries.push({
           level: tocIndentLevel(itemMatch[1]),
-          text: itemMatch[2],
+          text: cleanText,
           anchor: itemMatch[3],
         });
         consumedLines.push(line);
