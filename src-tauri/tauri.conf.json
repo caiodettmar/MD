@@ -18,7 +18,8 @@
         "minWidth": 640,
         "minHeight": 480,
         "decorations": true,
-        "resizable": true
+        "resizable": true,
+        "dragDropEnabled": false
       }
     ],
     "security": {
@@ -62,7 +63,23 @@
         "installMode": "both",
         "displayLanguageSelector": false
       }
+    },
+    "macOS": {
+      "frameworks": [],
+      "minimumSystemVersion": "10.13"
+    },
+    "linux": {
+      "deb": {
+        "depends": []
+      }
     }
   },
-  "plugins": {}
+  "plugins": {
+    "updater": {
+      "pubkey": "CONTENT_OF_TAURI_UPDATER_PUBLIC_KEY",
+      "endpoints": [
+        "https://github.com/caiodettmar/MD/releases/latest/download/latest.json"
+      ]
+    }
+  }
 }

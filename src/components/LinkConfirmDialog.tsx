@@ -1,3 +1,5 @@
+import { useDraggable } from "../hooks/useDraggable";
+
 interface LinkConfirmDialogProps {
   href: string | null;
   onCancel: () => void;
@@ -9,6 +11,8 @@ export function LinkConfirmDialog({
   onCancel,
   onConfirm,
 }: LinkConfirmDialogProps) {
+  const { handleMouseDown, style: dragStyle } = useDraggable(!!href);
+
   if (!href) {
     return null;
   }
@@ -19,6 +23,8 @@ export function LinkConfirmDialog({
         className="modal-card link-confirm-dialog"
         role="dialog"
         aria-labelledby="link-confirm-title"
+        style={dragStyle}
+        onMouseDown={handleMouseDown}
         onClick={(event) => event.stopPropagation()}
       >
         <h2 id="link-confirm-title">Open external link?</h2>

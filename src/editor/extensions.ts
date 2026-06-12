@@ -37,6 +37,7 @@ import {
 import { HeadingWithAnchor } from "./headingAnchorExtension";
 import { ShikiCodeBlock } from "./shikiCodeBlockExtension";
 import { TableOfContents } from "./tableOfContentsExtension";
+import { FindHighlightExtension } from "./findHighlightExtension";
 
 const NoInputBold = Bold.extend({ addInputRules: () => [] });
 const NoInputItalic = Italic.extend({ addInputRules: () => [] });
@@ -121,5 +122,6 @@ export function createEditorExtensions(
       allowBase64: true,
     }),
     LinkReferenceDefinitionMaintain,
+    FindHighlightExtension,
   ];
 }

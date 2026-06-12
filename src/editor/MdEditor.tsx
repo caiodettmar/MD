@@ -11,12 +11,17 @@ import { createEditorExtensions } from "./extensions";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { EditorImageMenu } from "./EditorImageMenu";
 import { refreshImageDisplaySrc } from "./markdownImage";
+import { useEditorStore } from "../stores/editorStore";
 import { insertConfirmedReferenceDefinition } from "./linkReferenceDefinitionUtils";
 import { setLinkClickHandler } from "./linkClickGuard";
 import {
   setReferenceDefinitionDialogHandler,
   type ReferenceDefinitionDialogRequest,
 } from "./referenceDefinitionDialogBridge";
+import {
+  markdownToUnicodeEmojis,
+  unicodeToEmojiShortcodes,
+} from "../lib/emojiConvert";
 
 interface MdEditorProps {
   tabId: string;
@@ -109,7 +114,12 @@ export function MdEditor({
         }
 
         skipExternalSyncRef.current = true;
-        const next = currentEditor.getMarkdown();
+        const nextRaw = currentEditor.getMarkdown();
+        const next =
+          useEditorStore.getState().config.emojiSaveMode === "shortcode"
+            ? unicodeToEmojiShortcodes(nextRaw)
+            : nextRaw;
+
         if (next === markdownRef.current) {
           skipExternalSyncRef.current = false;
           return;
@@ -140,6 +150,19 @@ export function MdEditor({
   }, [editor, editable]);
 
   useEffect(() => {
+    if (!editor || editor.isDestroyed) {
+      return;
+    }
+
+    const setFindSearchTarget = useEditorStore.getState().setFindSearchTarget;
+    const handleFocus = () => setFindSearchTarget("editor");
+    editor.on("focus", handleFocus);
+    return () => {
+      editor.off("focus", handleFocus);
+    };
+  }, [editor]);
+
+  useEffect(() => {
     if (!editor) {
       return;
     }
@@ -149,14 +172,15 @@ export function MdEditor({
       return;
     }
 
-    if (editor.getMarkdown() === markdown) {
+    const unicodeMarkdown = markdownToUnicodeEmojis(markdown);
+    if (editor.getMarkdown() === unicodeMarkdown) {
       markdownRef.current = markdown;
       isEditorReadyRef.current = true;
       refreshImageDisplaySrc(editor);
       return;
     }
 
-    editor.commands.setContent(markdown, {
+    editor.commands.setContent(unicodeMarkdown, {
       contentType: "markdown",
       emitUpdate: false,
     });
@@ -194,6 +218,38 @@ export function MdEditor({
     [editor, referenceDefinitionDialog],
   );
 
+  const config = useEditorStore((state) => state.config);
+  const contentWidthStyle = useMemo(() => {
+    if (config.useMaxWidth === false) {
+      return { "--content-width": "100%" } as React.CSSProperties;
+    }
+
+    let width = "720px";
+    const preset = config.maxWidthPreset || "Default";
+
+    if (preset === "A0") width = "841mm";
+    else if (preset === "A1") width = "594mm";
+    else if (preset === "A2") width = "420mm";
+    else if (preset === "A3") width = "297mm";
+    else if (preset === "A4") width = "210mm";
+    else if (preset === "A5") width = "148mm";
+    else if (preset === "A6") width = "105mm";
+    else if (preset === "Letter") width = "8.5in";
+    else if (preset === "Legal") width = "8.5in";
+    else if (preset === "Custom") {
+      const val = config.maxWidthCustomValue ?? 720;
+      const unit = config.maxWidthCustomUnit ?? "px";
+      width = `${val}${unit}`;
+    }
+
+    return { "--content-width": width } as React.CSSProperties;
+  }, [
+    config.useMaxWidth,
+    config.maxWidthPreset,
+    config.maxWidthCustomValue,
+    config.maxWidthCustomUnit,
+  ]);
+
   if (!editor) {
     return null;
   }
@@ -205,6 +261,7 @@ export function MdEditor({
         style={{
           fontSize: `${fontSize}%`,
           zoom: zoom / 100,
+          ...contentWidthStyle,
         }}
       >
         <EditorContent editor={editor} />

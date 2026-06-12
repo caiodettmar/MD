@@ -15,9 +15,6 @@ dist-ssr
 # Tauri
 src-tauri/target
 
-# Cursor agent
-.cursor/
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -28,3 +25,13 @@ src-tauri/target
 *.njsproj
 *.sln
 *.sw?
+
+# AI
+.cursor/
+.agents/
+.stitch/
+graphify-out/
+.docs/
+ORIGINAL_REQUEST.md
+PROJECT.md
+next-prompt.md

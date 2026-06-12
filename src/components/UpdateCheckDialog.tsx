@@ -6,6 +6,7 @@ import {
   RELEASES_URL,
   type UpdateCheckResult,
 } from "../lib/updateCheck";
+import { useDraggable } from "../hooks/useDraggable";
 
 interface UpdateCheckDialogProps {
   open: boolean;
@@ -54,6 +55,7 @@ function statusMessage(result: UpdateCheckResult | null, checking: boolean) {
 export function UpdateCheckDialog({ open, onClose }: UpdateCheckDialogProps) {
   const [checking, setChecking] = useState(false);
   const [result, setResult] = useState<UpdateCheckResult | null>(null);
+  const { handleMouseDown, style: dragStyle } = useDraggable(open);
 
   useEffect(() => {
     if (!open) {
@@ -87,6 +89,8 @@ export function UpdateCheckDialog({ open, onClose }: UpdateCheckDialogProps) {
         className="modal-card update-check-dialog"
         role="dialog"
         aria-labelledby="update-check-title"
+        style={dragStyle}
+        onMouseDown={handleMouseDown}
         onClick={(event) => event.stopPropagation()}
       >
         <h2 id="update-check-title">Check for updates</h2>

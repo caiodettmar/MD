@@ -7,6 +7,10 @@ import type {
   WriteResult,
 } from "../types";
 
+export function isTauriRuntime(): boolean {
+  return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+}
+
 export async function readMarkdownFile(path: string): Promise<FilePayload> {
   return invoke<FilePayload>("read_markdown_file", { path });
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useDraggable } from "../hooks/useDraggable";
 
 interface LinkEditDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ export function LinkEditDialog({
   const [href, setHref] = useState(initialHref);
   const [title, setTitle] = useState(initialTitle);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { handleMouseDown, style: dragStyle } = useDraggable(open);
 
   useEffect(() => {
     if (open) {
@@ -49,6 +51,8 @@ export function LinkEditDialog({
         className="modal-card insert-dialog"
         role="dialog"
         aria-labelledby="link-edit-title"
+        style={dragStyle}
+        onMouseDown={handleMouseDown}
         onClick={(event) => event.stopPropagation()}
         onKeyDown={(event) => {
           if (event.key === "Escape") {

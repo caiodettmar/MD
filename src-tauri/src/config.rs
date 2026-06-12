@@ -14,6 +14,32 @@ pub struct AppConfig {
     pub check_updates: bool,
     #[serde(default)]
     pub recent_files: Vec<String>,
+    #[serde(default = "default_true")]
+    pub show_edit_references: bool,
+    #[serde(default = "default_true")]
+    pub use_max_width: bool,
+    #[serde(default = "default_max_width_preset")]
+    pub max_width_preset: String,
+    #[serde(default = "default_max_width_custom_value")]
+    pub max_width_custom_value: u32,
+    #[serde(default = "default_max_width_custom_unit")]
+    pub max_width_custom_unit: String,
+}
+
+fn default_true() -> bool {
+    true
+}
+
+fn default_max_width_preset() -> String {
+    "Default".to_string()
+}
+
+fn default_max_width_custom_value() -> u32 {
+    720
+}
+
+fn default_max_width_custom_unit() -> String {
+    "px".to_string()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -44,6 +70,11 @@ impl Default for AppConfig {
             auto_save_ms: 2000,
             check_updates: true,
             recent_files: Vec::new(),
+            show_edit_references: true,
+            use_max_width: true,
+            max_width_preset: "Default".to_string(),
+            max_width_custom_value: 720,
+            max_width_custom_unit: "px".to_string(),
         }
     }
 }

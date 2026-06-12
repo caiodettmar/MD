@@ -1,4 +1,5 @@
 import Heading from "@tiptap/extension-heading";
+import { mergeAttributes } from "@tiptap/core";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { EditorState, Transaction } from "@tiptap/pm/state";
@@ -65,6 +66,40 @@ export const HeadingWithAnchor = Heading.extend({
         },
       },
     };
+  },
+
+  renderHTML({ node, HTMLAttributes }) {
+    const level = node.attrs.level;
+    if (level <= 3) {
+      return [
+        `h${level}`,
+        mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+          class: "md-heading-with-toc",
+        }),
+        [
+          "span",
+          { class: "md-heading-text" },
+          0,
+        ],
+        [
+          "a",
+          {
+            href: "#",
+            class: "md-back-to-toc",
+            "data-toc-back": "true",
+            title: "Go to Table of Contents",
+            contenteditable: "false",
+          },
+          "↑",
+        ],
+      ];
+    }
+
+    return [
+      `h${level}`,
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+      0,
+    ];
   },
 
   addProseMirrorPlugins() {

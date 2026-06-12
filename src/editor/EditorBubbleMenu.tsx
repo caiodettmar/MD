@@ -225,166 +225,183 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
 
   const renderMainToolbar = () => (
     <>
-      {markRegistry.map((entry) => (
+      {/* Group 1: Text */}
+      <div className="selection-toolbar__group">
+        {markRegistry.map((entry) => (
+          <button
+            key={entry.id}
+            type="button"
+            className={`selection-toolbar__button ${
+              isMarkActive(editor, entry.id) ? "is-active" : ""
+            }`}
+            title={entry.label}
+            aria-label={entry.label}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              entry.run(editor);
+            }}
+          >
+            <ToolbarIcon id={getMarkToolbarIcon(entry.id)} />
+          </button>
+        ))}
+      </div>
+
+      <span className="selection-toolbar__divider" aria-hidden="true" />
+
+      {/* Group 2: Color */}
+      <div className="selection-toolbar__group">
         <button
-          key={entry.id}
           type="button"
-          className={`selection-toolbar__button ${
-            isMarkActive(editor, entry.id) ? "is-active" : ""
-          }`}
-          title={entry.label}
-          aria-label={entry.label}
+          className="selection-toolbar__button selection-toolbar__button--color"
+          title="Text color"
+          aria-label="Text color"
           onMouseDown={(event) => {
             event.preventDefault();
-            entry.run(editor);
+            setView("textColor");
           }}
         >
-          <ToolbarIcon id={getMarkToolbarIcon(entry.id)} />
+          <span
+            className="selection-toolbar__text-color-glyph"
+            style={{ borderBottomColor: activeTextColor }}
+          >
+            A
+          </span>
         </button>
-      ))}
-      <span className="selection-toolbar__divider" aria-hidden="true" />
-      <button
-        type="button"
-        className="selection-toolbar__button selection-toolbar__button--color"
-        title="Text color"
-        aria-label="Text color"
-        onMouseDown={(event) => {
-          event.preventDefault();
-          setView("textColor");
-        }}
-      >
-        <span
-          className="selection-toolbar__text-color-glyph"
-          style={{ borderBottomColor: activeTextColor }}
-        >
-          A
-        </span>
-      </button>
-      <button
-        type="button"
-        className="selection-toolbar__button"
-        title="Highlight color"
-        aria-label="Highlight color"
-        onMouseDown={(event) => {
-          event.preventDefault();
-          setView("highlightColor");
-        }}
-      >
-        <ToolbarIcon id="highlightColor" />
-      </button>
-      <span className="selection-toolbar__divider" aria-hidden="true" />
-      <button
-        type="button"
-        className="selection-toolbar__button"
-        title="Remove formatting"
-        aria-label="Remove formatting"
-        onMouseDown={(event) => {
-          event.preventDefault();
-          removeFormatting();
-        }}
-      >
-        <ToolbarIcon id="clearFormatting" />
-      </button>
-      <span className="selection-toolbar__divider" aria-hidden="true" />
-      <button
-        type="button"
-        className={`selection-toolbar__button ${
-          editor.isActive("heading") ? "is-active" : ""
-        }`}
-        title="Heading"
-        aria-label="Heading"
-        onMouseDown={(event) => {
-          event.preventDefault();
-          setView("headings");
-        }}
-      >
-        <ToolbarIcon id="heading" />
-      </button>
-      <button
-        type="button"
-        className={`selection-toolbar__button ${
-          editor.isActive("bulletList") ? "is-active" : ""
-        }`}
-        title="Bullet list"
-        aria-label="Bullet list"
-        onMouseDown={(event) => {
-          event.preventDefault();
-          editor.chain().focus().toggleBulletList().run();
-        }}
-      >
-        <ToolbarIcon id="bulletList" />
-      </button>
-      <button
-        type="button"
-        className={`selection-toolbar__button ${
-          editor.isActive("orderedList") ? "is-active" : ""
-        }`}
-        title="Numbered list"
-        aria-label="Numbered list"
-        onMouseDown={(event) => {
-          event.preventDefault();
-          editor.chain().focus().toggleOrderedList().run();
-        }}
-      >
-        <ToolbarIcon id="orderedList" />
-      </button>
-      <button
-        type="button"
-        className={`selection-toolbar__button ${
-          editor.isActive("taskList") ? "is-active" : ""
-        }`}
-        title="Task list"
-        aria-label="Task list"
-        onMouseDown={(event) => {
-          event.preventDefault();
-          editor.chain().focus().toggleTaskList().run();
-        }}
-      >
-        <ToolbarIcon id="taskList" />
-      </button>
-      <button
-        type="button"
-        className={`selection-toolbar__button ${
-          editor.isActive("blockquote") ? "is-active" : ""
-        }`}
-        title="Quote"
-        aria-label="Quote"
-        onMouseDown={(event) => {
-          event.preventDefault();
-          editor.chain().focus().toggleBlockquote().run();
-        }}
-      >
-        <ToolbarIcon id="blockquote" />
-      </button>
-      <span className="selection-toolbar__divider" aria-hidden="true" />
-      <button
-        type="button"
-        className={`selection-toolbar__button ${
-          editor.isActive("link") ? "is-active" : ""
-        }`}
-        title={editor.isActive("link") ? "Edit link" : "Add link"}
-        aria-label={editor.isActive("link") ? "Edit link" : "Add link"}
-        onMouseDown={(event) => {
-          event.preventDefault();
-          openLinkDialog();
-        }}
-      >
-        <ToolbarIcon id="link" />
-      </button>
-      {editor.isActive("link") ? (
         <button
           type="button"
           className="selection-toolbar__button"
-          title="Remove link"
-          aria-label="Remove link"
+          title="Highlight color"
+          aria-label="Highlight color"
           onMouseDown={(event) => {
             event.preventDefault();
-            removeLink();
+            setView("highlightColor");
           }}
         >
-          <ToolbarIcon id="linkRemove" />
+          <ToolbarIcon id="highlightColor" />
         </button>
-      ) : null}
+        <button
+          type="button"
+          className="selection-toolbar__button"
+          title="Remove formatting"
+          aria-label="Remove formatting"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            removeFormatting();
+          }}
+        >
+          <ToolbarIcon id="clearFormatting" />
+        </button>
+      </div>
+
+      <span className="selection-toolbar__divider" aria-hidden="true" />
+
+      {/* Group 3: Structure */}
+      <div className="selection-toolbar__group">
+        <button
+          type="button"
+          className={`selection-toolbar__button ${
+            editor.isActive("heading") ? "is-active" : ""
+          }`}
+          title="Heading"
+          aria-label="Heading"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            setView("headings");
+          }}
+        >
+          <ToolbarIcon id="heading" />
+        </button>
+        <button
+          type="button"
+          className={`selection-toolbar__button ${
+            editor.isActive("bulletList") ? "is-active" : ""
+          }`}
+          title="Bullet list"
+          aria-label="Bullet list"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            editor.chain().focus().toggleBulletList().run();
+          }}
+        >
+          <ToolbarIcon id="bulletList" />
+        </button>
+        <button
+          type="button"
+          className={`selection-toolbar__button ${
+            editor.isActive("orderedList") ? "is-active" : ""
+          }`}
+          title="Numbered list"
+          aria-label="Numbered list"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            editor.chain().focus().toggleOrderedList().run();
+          }}
+        >
+          <ToolbarIcon id="orderedList" />
+        </button>
+        <button
+          type="button"
+          className={`selection-toolbar__button ${
+            editor.isActive("taskList") ? "is-active" : ""
+          }`}
+          title="Task list"
+          aria-label="Task list"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            editor.chain().focus().toggleTaskList().run();
+          }}
+        >
+          <ToolbarIcon id="taskList" />
+        </button>
+        <button
+          type="button"
+          className={`selection-toolbar__button ${
+            editor.isActive("blockquote") ? "is-active" : ""
+          }`}
+          title="Quote"
+          aria-label="Quote"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            editor.chain().focus().toggleBlockquote().run();
+          }}
+        >
+          <ToolbarIcon id="blockquote" />
+        </button>
+      </div>
+
+      <span className="selection-toolbar__divider" aria-hidden="true" />
+
+      {/* Group 4: Link */}
+      <div className="selection-toolbar__group">
+        <button
+          type="button"
+          className={`selection-toolbar__button ${
+            editor.isActive("link") ? "is-active" : ""
+          }`}
+          title={editor.isActive("link") ? "Edit link" : "Add link"}
+          aria-label={editor.isActive("link") ? "Edit link" : "Add link"}
+          onMouseDown={(event) => {
+            event.preventDefault();
+            openLinkDialog();
+          }}
+        >
+          <ToolbarIcon id="link" />
+        </button>
+        {editor.isActive("link") ? (
+          <button
+            type="button"
+            className="selection-toolbar__button"
+            title="Remove link"
+            aria-label="Remove link"
+            onMouseDown={(event) => {
+              event.preventDefault();
+              removeLink();
+            }}
+          >
+            <ToolbarIcon id="linkRemove" />
+          </button>
+        ) : null}
+      </div>
     </>
   );
 

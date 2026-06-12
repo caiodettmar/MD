@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { AppShell } from "./components/AppShell";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useEditorStore } from "./stores/editorStore";
 import "./styles/theme.css";
@@ -27,7 +28,9 @@ function App() {
   return (
     <>
       <ThemeSync />
-      <AppShell />
+      <ErrorBoundary>
+        <AppShell />
+      </ErrorBoundary>
     </>
   );
 }

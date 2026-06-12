@@ -24,6 +24,11 @@ import {
   saveSession,
   writeMarkdownFile,
 } from "../lib/tauri";
+import type { MarkdownMatch } from "../lib/markdownPaneSync";
+import {
+  markdownToUnicodeEmojis,
+  unicodeToEmojiShortcodes,
+} from "../lib/emojiConvert";
 
 const MAX_RECENT_FILES = 10;
 
@@ -41,6 +46,10 @@ interface EditorStore {
   linkDialogOpen: boolean;
   findBarOpen: boolean;
   findBarReplaceMode: boolean;
+  findSearchTarget: "editor" | "raw";
+  rawFindMatches: MarkdownMatch[];
+  rawFindCurrentIndex: number;
+  isSavingSession: boolean;
   editors: Record<string, Editor | null>;
   init: () => Promise<void>;
   updateConfig: (partial: Partial<AppConfig>) => void;
@@ -53,6 +62,9 @@ interface EditorStore {
   setLinkDialogOpen: (open: boolean) => void;
   openFindBar: (replaceMode: boolean) => void;
   closeFindBar: () => void;
+  setFindSearchTarget: (target: "editor" | "raw") => void;
+  setRawFindHighlights: (matches: MarkdownMatch[], currentIndex: number) => void;
+  clearRawFindHighlights: () => void;
   addRecentFile: (path: string) => void;
   clearRecentFiles: () => void;
   openFileByPath: (path: string) => Promise<void>;
@@ -71,6 +83,7 @@ interface EditorStore {
   saveActiveTab: () => Promise<boolean>;
   saveActiveTabAs: () => Promise<boolean>;
   cycleTab: (direction: "next" | "prev") => void;
+  reorderTabs: (fromIndex: number, toIndex: number) => void;
   printActiveTab: () => void;
   persistSession: () => Promise<void>;
   persistConfig: () => Promise<void>;
@@ -137,6 +150,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   linkDialogOpen: false,
   findBarOpen: false,
   findBarReplaceMode: false,
+  findSearchTarget: "editor",
+  rawFindMatches: [],
+  rawFindCurrentIndex: 0,
+  isSavingSession: false,
   editors: {},
 
   init: async () => {
@@ -237,11 +254,49 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
 
   openFindBar: (replaceMode) => {
-    set({ findBarOpen: true, findBarReplaceMode: replaceMode });
+    const active = document.activeElement;
+    const textarea = document.querySelector<HTMLTextAreaElement>(
+      ".raw-pane__textarea",
+    );
+    const { activeTabId, editors, showRawPane, findSearchTarget } = get();
+    const editor = activeTabId ? editors[activeTabId] : null;
+
+    let target: "editor" | "raw" = findSearchTarget;
+    if (showRawPane && textarea && active === textarea) {
+      target = "raw";
+    } else if (
+      editor &&
+      !editor.isDestroyed &&
+      active instanceof Node &&
+      editor.view.dom.contains(active)
+    ) {
+      target = "editor";
+    }
+
+    set({
+      findBarOpen: true,
+      findBarReplaceMode: replaceMode,
+      findSearchTarget: target,
+    });
   },
 
   closeFindBar: () => {
-    set({ findBarOpen: false });
+    set({ findBarOpen: false, rawFindMatches: [], rawFindCurrentIndex: 0 });
+  },
+
+  setFindSearchTarget: (target) => {
+    set({ findSearchTarget: target });
+  },
+
+  setRawFindHighlights: (matches, currentIndex) => {
+    set({
+      rawFindMatches: matches,
+      rawFindCurrentIndex: currentIndex,
+    });
+  },
+
+  clearRawFindHighlights: () => {
+    set({ rawFindMatches: [], rawFindCurrentIndex: 0 });
   },
 
   addRecentFile: (path) => {
@@ -284,7 +339,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         id: uuidv4(),
         path: file.path,
         title: fileNameFromPath(file.path),
-        markdown: file.content,
+        markdown: markdownToUnicodeEmojis(file.content),
         dirty: false,
         saveStatus: "saved",
         lastSavedAt: new Date().toISOString(),
@@ -341,7 +396,16 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
 
   setActiveTab: (tabId) => {
-    set({ activeTabId: tabId });
+    const { activeTabId } = get();
+    if (activeTabId === tabId) {
+      return;
+    }
+
+    set({
+      activeTabId: tabId,
+      rawFindMatches: [],
+      rawFindCurrentIndex: 0,
+    });
   },
 
   closeTab: (tabId) => {
@@ -355,8 +419,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         };
       }
 
-      const index = state.tabs.findIndex((tab) => tab.id === tabId);
-      const tabs = state.tabs.filter((tab) => tab.id !== tabId);
+      const index = state.tabs.findIndex((t) => t.id === tabId);
+      const tabs = state.tabs.filter((t) => t.id !== tabId);
       const nextEditors = { ...state.editors };
       delete nextEditors[tabId];
 
@@ -447,7 +511,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     }));
 
     try {
-      const result = await writeMarkdownFile(path, tab.markdown);
+      const markdownToWrite =
+        get().config.emojiSaveMode === "shortcode"
+          ? unicodeToEmojiShortcodes(tab.markdown)
+          : tab.markdown;
+      const result = await writeMarkdownFile(path, markdownToWrite);
       set((state) => ({
         tabs: state.tabs.map((entry) =>
           entry.id === tab.id
@@ -459,7 +527,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
                 saveStatus: "saved" as SaveStatus,
                 lastSavedAt: result.savedAt,
               }
-              : entry,
+            : entry,
         ),
       }));
       get().addRecentFile(result.path);
@@ -494,7 +562,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     }
 
     try {
-      const result = await writeMarkdownFile(path, tab.markdown);
+      const markdownToWrite =
+        get().config.emojiSaveMode === "shortcode"
+          ? unicodeToEmojiShortcodes(tab.markdown)
+          : tab.markdown;
+      const result = await writeMarkdownFile(path, markdownToWrite);
       set((state) => ({
         tabs: state.tabs.map((entry) =>
           entry.id === tab.id
@@ -538,6 +610,15 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     set({ activeTabId: tabs[nextIndex]?.id ?? activeTabId });
   },
 
+  reorderTabs: (fromIndex, toIndex) => {
+    set((state) => {
+      const nextTabs = [...state.tabs];
+      const [removed] = nextTabs.splice(fromIndex, 1);
+      nextTabs.splice(toIndex, 0, removed);
+      return { tabs: nextTabs };
+    });
+  },
+
   printActiveTab: () => {
     const editor = get().getActiveEditor();
     const activeTab = get().tabs.find((tab) => tab.id === get().activeTabId);
@@ -553,18 +634,28 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
 
   persistSession: async () => {
-    const { tabs, activeTabId } = get();
-    await saveSession({
-      tabs: tabs.map(({ id, path, title, markdown, dirty }) => ({
-        id,
-        path,
-        title,
-        markdown,
-        dirty,
-      })),
-      activeTabId,
-      savedAt: new Date().toISOString(),
-    });
+    if (get().isSavingSession) {
+      return;
+    }
+    set({ isSavingSession: true });
+    try {
+      const { tabs, activeTabId } = get();
+      await saveSession({
+        tabs: tabs.map(({ id, path, title, markdown, dirty }) => ({
+          id,
+          path,
+          title,
+          markdown,
+          dirty,
+        })),
+        activeTabId,
+        savedAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Failed to save session:", error);
+    } finally {
+      set({ isSavingSession: false });
+    }
   },
 
   persistConfig: async () => {

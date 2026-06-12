@@ -1,4 +1,5 @@
 import { APP_VERSION } from "../lib/appVersion";
+import { useDraggable } from "../hooks/useDraggable";
 
 interface AboutDialogProps {
   open: boolean;
@@ -6,6 +7,8 @@ interface AboutDialogProps {
 }
 
 export function AboutDialog({ open, onClose }: AboutDialogProps) {
+  const { handleMouseDown, style: dragStyle } = useDraggable(open);
+
   if (!open) {
     return null;
   }
@@ -16,6 +19,8 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
         className="modal-card"
         role="dialog"
         aria-labelledby="about-title"
+        style={dragStyle}
+        onMouseDown={handleMouseDown}
         onClick={(event) => event.stopPropagation()}
       >
         <h2 id="about-title">About MD</h2>

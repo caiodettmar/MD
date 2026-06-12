@@ -1,6 +1,6 @@
 import Image from "@tiptap/extension-image";
 import { InputRule, type Editor } from "@tiptap/core";
-import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { Plugin, PluginKey, NodeSelection } from "@tiptap/pm/state";
 import {
   buildImageNodeAttrs,
   normalizeMarkdownImageSrc,
@@ -81,8 +81,51 @@ function createImageRefreshPlugin(getDocumentPath: () => string | null) {
   });
 }
 
+function createImageDragSelectPlugin() {
+  return new Plugin({
+    key: new PluginKey("imageDragSelect"),
+    view(editorView) {
+      const handleMousedown = (event: MouseEvent) => {
+        const target = event.target as HTMLElement;
+        if (target) {
+          const img = target.nodeName === "IMG" ? target : target.closest("img");
+          if (img) {
+            try {
+              const pos = editorView.posAtDOM(img, 0);
+              if (pos >= 0) {
+                const node = editorView.state.doc.nodeAt(pos);
+                if (node && node.type.name === "image") {
+                  // Select the image node
+                  const selection = NodeSelection.create(editorView.state.doc, pos);
+                  const transaction = editorView.state.tr.setSelection(selection);
+                  editorView.dispatch(transaction);
+                  
+                  // Stop propagation so ProseMirror doesn't handle the mousedown and overwrite selection
+                  event.stopPropagation();
+                }
+              }
+            } catch (e) {
+              console.error("Error in image mousedown handler:", e);
+            }
+          }
+        }
+      };
+
+      editorView.dom.addEventListener("mousedown", handleMousedown, true);
+
+      return {
+        destroy() {
+          editorView.dom.removeEventListener("mousedown", handleMousedown, true);
+        },
+      };
+    },
+  });
+}
+
 export function createMarkdownImage(getDocumentPath: () => string | null) {
   return Image.extend({
+    draggable: true,
+    atom: true,
     addAttributes() {
       return {
         ...this.parent?.(),
@@ -157,7 +200,10 @@ export function createMarkdownImage(getDocumentPath: () => string | null) {
     },
 
     addProseMirrorPlugins() {
-      return [createImageRefreshPlugin(getDocumentPath)];
+      return [
+        createImageRefreshPlugin(getDocumentPath),
+        createImageDragSelectPlugin(),
+      ];
     },
 
     addInputRules() {

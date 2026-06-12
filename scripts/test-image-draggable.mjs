@@ -27,25 +27,25 @@ globalThis.cancelAnimationFrame = (id) => clearTimeout(id);
 import { Editor } from "@tiptap/core";
 import { createEditorExtensions } from "../src/editor/extensions.ts";
 
-let updates = 0;
-
 const editor = new Editor({
   extensions: createEditorExtensions(),
-  content: "",
+  content: "Paragraph before\n\n![alt](http://example.com/img.png)\n\nParagraph after",
   contentType: "markdown",
-  onUpdate: () => {
-    updates += 1;
-    if (updates > 500) {
-      throw new Error(`Too many updates (${updates})`);
-    }
-  },
 });
 
-for (let index = 0; index < 50; index += 1) {
-  editor.view.dispatch(editor.state.tr.scrollIntoView());
-  editor.commands.focus();
+const img = editor.view.dom.querySelector("img");
+console.log("Img element found:", !!img);
+if (img) {
+  console.log("Image node spec draggable:", editor.schema.nodes.image.spec.draggable);
+  console.log("Image node spec selectable:", editor.schema.nodes.image.spec.selectable);
+  
+  const pos = editor.view.posAtDOM(img, 0);
+  console.log("posAtDOM(img, 0):", pos);
+  const node = editor.state.doc.nodeAt(pos);
+  console.log("Node at pos:", node?.type.name);
+  console.log("draggable attribute:", img.getAttribute("draggable"));
+  console.log("outerHTML:", img.outerHTML);
 }
 
-console.log("empty doc clicks", 50);
-console.log("updates", updates);
 editor.destroy();
+process.exit(0);

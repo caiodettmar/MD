@@ -13,6 +13,7 @@ const SUPPORTED_LANGS = [
   "rust",
   "sql",
   "yaml",
+  "mermaid",
 ] as const;
 
 let highlighterPromise: Promise<Highlighter> | null = null;

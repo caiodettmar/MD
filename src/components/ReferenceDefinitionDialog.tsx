@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { useDraggable } from "../hooks/useDraggable";
 
 export interface ReferenceDefinitionDialogValues {
   id: string;
@@ -25,6 +26,7 @@ export function ReferenceDefinitionDialog({
   const [id, setId] = useState(initialId ?? "");
   const [href, setHref] = useState("");
   const [title, setTitle] = useState("");
+  const { handleMouseDown, style: dragStyle } = useDraggable(initialId !== null);
 
   useEffect(() => {
     setId(initialId ?? "");
@@ -45,6 +47,8 @@ export function ReferenceDefinitionDialog({
         className="modal-card ref-def-dialog"
         role="dialog"
         aria-labelledby={titleId}
+        style={dragStyle}
+        onMouseDown={handleMouseDown}
         onClick={(event) => event.stopPropagation()}
       >
         <h2 id={titleId}>Add reference definition</h2>

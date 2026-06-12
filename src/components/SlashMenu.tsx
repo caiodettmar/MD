@@ -10,7 +10,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import type { Editor } from "@tiptap/react";
-import { EMOJI_PRESETS } from "../editor/constants/emojiPresets";
+import { EmojiPicker } from "./EmojiPicker";
 import { insertDefaultTable } from "../editor/blockCommands";
 import { insertDefinitionList } from "../editor/definitionListExtension";
 import { insertTableOfContents } from "../editor/tableOfContentsExtension";
@@ -21,6 +21,41 @@ import { useEditorStore } from "../stores/editorStore";
 
 interface SlashMenuProps {
   editor: Editor;
+}
+
+function getSlashIcon(key: string): string | null {
+  if (key.startsWith("mark-")) {
+    const markId = key.slice(5);
+    switch (markId) {
+      case "bold": return "format_bold";
+      case "italic": return "format_italic";
+      case "strike": return "strikethrough_s";
+      case "highlight": return "ink_highlighter";
+      case "underline": return "format_underlined";
+      case "code": return "code";
+      case "subscript": return "subscript";
+      case "superscript": return "superscript";
+      default: return null;
+    }
+  }
+  switch (key) {
+    case "block-h1": return "format_h1";
+    case "block-h2": return "format_h2";
+    case "block-h3": return "format_h3";
+    case "block-bullet": return "format_list_bulleted";
+    case "block-ordered": return "format_list_numbered";
+    case "block-task": return "checklist";
+    case "block-quote": return "format_quote";
+    case "block-code": return "code";
+    case "block-hr": return "horizontal_rule";
+    case "block-table": return "table_chart";
+    case "block-definition-list": return "list";
+    case "block-toc": return "toc";
+    case "block-image": return "image";
+    case "block-link": return "link";
+    case "emoji-panel": return "mood";
+    default: return null;
+  }
 }
 
 interface SlashMenuItem {
@@ -41,6 +76,7 @@ const blockItems = [
     id: "block-h1",
     label: "Heading 1",
     hint: "#",
+    group: "Blocks",
     keywords: ["h1", "heading"],
     run: (e: Editor) => e.chain().focus().toggleHeading({ level: 1 }).run(),
   },
@@ -48,13 +84,23 @@ const blockItems = [
     id: "block-h2",
     label: "Heading 2",
     hint: "##",
+    group: "Blocks",
     keywords: ["h2", "heading"],
     run: (e: Editor) => e.chain().focus().toggleHeading({ level: 2 }).run(),
+  },
+  {
+    id: "block-h3",
+    label: "Heading 3",
+    hint: "###",
+    group: "Blocks",
+    keywords: ["h3", "heading"],
+    run: (e: Editor) => e.chain().focus().toggleHeading({ level: 3 }).run(),
   },
   {
     id: "block-bullet",
     label: "Bullet list",
     hint: "-",
+    group: "Blocks",
     keywords: ["bullet", "list", "ul"],
     run: (e: Editor) => e.chain().focus().toggleBulletList().run(),
   },
@@ -62,6 +108,7 @@ const blockItems = [
     id: "block-ordered",
     label: "Numbered list",
     hint: "1.",
+    group: "Blocks",
     keywords: ["numbered", "ordered", "ol"],
     run: (e: Editor) => e.chain().focus().toggleOrderedList().run(),
   },
@@ -69,6 +116,7 @@ const blockItems = [
     id: "block-task",
     label: "Task list",
     hint: "[ ]",
+    group: "Blocks",
     keywords: ["task", "todo", "checkbox"],
     run: (e: Editor) => e.chain().focus().toggleTaskList().run(),
   },
@@ -76,6 +124,7 @@ const blockItems = [
     id: "block-quote",
     label: "Quote",
     hint: ">",
+    group: "Blocks",
     keywords: ["quote", "blockquote"],
     run: (e: Editor) => e.chain().focus().toggleBlockquote().run(),
   },
@@ -83,6 +132,7 @@ const blockItems = [
     id: "block-code",
     label: "Code block",
     hint: "```",
+    group: "Blocks",
     keywords: ["codeblock", "fence"],
     run: (e: Editor) => e.chain().focus().toggleCodeBlock().run(),
   },
@@ -90,6 +140,7 @@ const blockItems = [
     id: "block-hr",
     label: "Divider",
     hint: "---",
+    group: "Blocks",
     keywords: ["hr", "divider", "rule"],
     run: (e: Editor) => e.chain().focus().setHorizontalRule().run(),
   },
@@ -97,6 +148,7 @@ const blockItems = [
     id: "block-table",
     label: "Table",
     hint: "3×3",
+    group: "Insert",
     keywords: ["table", "grid"],
     run: (e: Editor) => insertDefaultTable(e),
   },
@@ -104,6 +156,7 @@ const blockItems = [
     id: "block-definition-list",
     label: "Definition list",
     hint: "dl",
+    group: "Insert",
     keywords: ["definition", "deflist", "dl", "term"],
     run: (e: Editor) => insertDefinitionList(e),
   },
@@ -111,6 +164,7 @@ const blockItems = [
     id: "block-toc",
     label: "Table of contents",
     hint: "TOC",
+    group: "Insert",
     keywords: ["toc", "contents", "outline"],
     run: (e: Editor) => insertTableOfContents(e),
   },
@@ -118,6 +172,7 @@ const blockItems = [
     id: "block-image",
     label: "Image",
     hint: "img",
+    group: "Insert",
     keywords: ["image", "img", "picture"],
     run: () => {
       useEditorStore.getState().setImageDialogOpen(true);
@@ -127,6 +182,7 @@ const blockItems = [
     id: "block-link",
     label: "Link",
     hint: "url",
+    group: "Insert",
     keywords: ["link", "url", "href"],
     run: () => {
       useEditorStore.getState().setLinkDialogOpen(true);
@@ -299,21 +355,7 @@ export function SlashMenu({ editor }: SlashMenuProps) {
     }
 
     if (emojiMode) {
-      return EMOJI_PRESETS.filter(
-        (entry) =>
-          !filterQuery ||
-          emojiMode ||
-          entry.name.includes(filterQuery) ||
-          entry.emoji.includes(filterQuery),
-      ).map((entry) => ({
-        key: `emoji-${entry.name}`,
-        className: "slash-menu__emoji",
-        content: entry.emoji,
-        run: () => {
-          insertEmoji(editor, entry.emoji);
-          setShowEmojiPanel(false);
-        },
-      }));
+      return [];
     }
 
     const menuItems: SlashMenuItem[] = [];
@@ -327,13 +369,22 @@ export function SlashMenu({ editor }: SlashMenuProps) {
       .sort((left, right) => right.score - left.score);
 
     marks.forEach(({ entry }, index) => {
+      const key = `mark-${entry.id}`;
+      const icon = getSlashIcon(key);
       menuItems.push({
-        key: `mark-${entry.id}`,
+        key,
         section: index === 0 ? "Formatting" : undefined,
         className: "slash-menu__item",
         content: (
           <>
-            <span>{entry.label}</span>
+            <span className="slash-menu__item-left">
+              {icon && (
+                <span className="material-symbols-outlined slash-menu__item-icon">
+                  {icon}
+                </span>
+              )}
+              <span className="slash-menu__label">{entry.label}</span>
+            </span>
             <span className="slash-menu__hint">{entry.shortcutLabel ?? ""}</span>
           </>
         ),
@@ -352,14 +403,61 @@ export function SlashMenu({ editor }: SlashMenuProps) {
       .filter(({ score }) => score >= 0)
       .sort((left, right) => right.score - left.score);
 
-    blocks.forEach(({ entry }, index) => {
+    // Group blocks by block vs insert
+    const blockGroup: typeof blocks = [];
+    const insertGroup: typeof blocks = [];
+    blocks.forEach((item) => {
+      if (item.entry.group === "Insert") {
+        insertGroup.push(item);
+      } else {
+        blockGroup.push(item);
+      }
+    });
+
+    blockGroup.forEach(({ entry }, index) => {
+      const key = entry.id;
+      const icon = getSlashIcon(key);
       menuItems.push({
-        key: entry.id,
+        key,
         section: index === 0 ? "Blocks" : undefined,
         className: "slash-menu__item",
         content: (
           <>
-            <span>{entry.label}</span>
+            <span className="slash-menu__item-left">
+              {icon && (
+                <span className="material-symbols-outlined slash-menu__item-icon">
+                  {icon}
+                </span>
+              )}
+              <span className="slash-menu__label">{entry.label}</span>
+            </span>
+            <span className="slash-menu__hint">{entry.hint}</span>
+          </>
+        ),
+        run: () => {
+          removeSlashTrigger(editor);
+          entry.run(editor);
+        },
+      });
+    });
+
+    insertGroup.forEach(({ entry }, index) => {
+      const key = entry.id;
+      const icon = getSlashIcon(key);
+      menuItems.push({
+        key,
+        section: index === 0 ? "Insert" : undefined,
+        className: "slash-menu__item",
+        content: (
+          <>
+            <span className="slash-menu__item-left">
+              {icon && (
+                <span className="material-symbols-outlined slash-menu__item-icon">
+                  {icon}
+                </span>
+              )}
+              <span className="slash-menu__label">{entry.label}</span>
+            </span>
             <span className="slash-menu__hint">{entry.hint}</span>
           </>
         ),
@@ -371,12 +469,22 @@ export function SlashMenu({ editor }: SlashMenuProps) {
     });
 
     if (matchesSlashQuery(filterQuery, "Emoji", ["emoji"])) {
+      const key = "emoji-panel";
+      const icon = getSlashIcon(key);
       menuItems.push({
-        key: "emoji-panel",
+        key,
+        section: insertGroup.length === 0 ? "Insert" : undefined,
         className: "slash-menu__item",
         content: (
           <>
-            <span>Emoji</span>
+            <span className="slash-menu__item-left">
+              {icon && (
+                <span className="material-symbols-outlined slash-menu__item-icon">
+                  {icon}
+                </span>
+              )}
+              <span className="slash-menu__label">Emoji</span>
+            </span>
             <span className="slash-menu__hint">→</span>
           </>
         ),
@@ -400,7 +508,7 @@ export function SlashMenu({ editor }: SlashMenuProps) {
   }, []);
 
   useEffect(() => {
-    if (!menuOpen || items.length === 0) {
+    if (!menuOpen || items.length === 0 || emojiMode) {
       return;
     }
 
@@ -451,51 +559,34 @@ export function SlashMenu({ editor }: SlashMenuProps) {
     }
   }, [selectedIndex]);
 
-  if (!menuOpen || items.length === 0) {
+  const hasItems = emojiMode || items.length > 0;
+  if (!menuOpen || !hasItems) {
     return null;
   }
 
   return createPortal(
     <div
-      className="slash-menu"
+      className={`slash-menu ${emojiMode ? "is-emoji" : ""}`}
       style={{
         position: "fixed",
         top: `${position.top}px`,
         left: `${position.left}px`,
         zIndex: 40,
-        maxHeight: "320px",
       }}
     >
-      <div ref={menuRef}>
-        {emojiMode ? (
-          <>
-            <div className="slash-menu__section">Emoji</div>
-            <div className="slash-menu__emoji-grid">
-              {items.map((item, index) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  className={`${item.className}${
-                    index === selectedIndex ? " is-selected" : ""
-                  }`}
-                  title={
-                    item.key.startsWith("emoji-")
-                      ? `:${item.key.slice(6)}:`
-                      : undefined
-                  }
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    item.run();
-                  }}
-                  onMouseEnter={() => setSelectedIndex(index)}
-                >
-                  {item.content}
-                </button>
-              ))}
-            </div>
-          </>
-        ) : (
-          items.map((item, index) => (
+      {emojiMode ? (
+        <EmojiPicker
+          onSelectEmoji={(emoji) => insertEmoji(editor, emoji)}
+          onClose={() => setShowEmojiPanel(false)}
+          initialSearch={
+            filterQuery.toLowerCase().startsWith("emoji")
+              ? filterQuery.slice(5).trim()
+              : ""
+          }
+        />
+      ) : (
+        <div ref={menuRef}>
+          {items.map((item, index) => (
             <div key={item.key}>
               {item.section ? (
                 <div className="slash-menu__section">{item.section}</div>
@@ -514,9 +605,9 @@ export function SlashMenu({ editor }: SlashMenuProps) {
                 {item.content}
               </button>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>,
     document.body,
   );

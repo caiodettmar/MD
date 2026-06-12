@@ -6,8 +6,8 @@ import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { Transaction } from "@tiptap/pm/state";
 import { TableOfContentsView } from "./TableOfContentsView";
 
-/** Markdown convention: a single `[TOC]` line still round-trips this block. */
-export const TOC_MARKDOWN_MARKER = "[TOC]";
+/** Markdown convention: a single mixed-case `[ToC]` line represents this block. */
+export const TOC_MARKDOWN_MARKER = "[ToC]";
 
 const TOC_LIST_LINE_RE = /^(\s*)-\s+\[([^\]]+)\]\(#([^)]+)\)\s*$/;
 
@@ -15,43 +15,19 @@ function tocIndentLevel(indent: string): number {
   return Math.min(3, Math.floor(indent.length / 2) + 1);
 }
 
-function parseTocMarkdownBlock(src: string): { raw: string; entries: TocEntry[] } | null {
-  const lines = src.split("\n");
-  const entries: TocEntry[] = [];
-  const rawLines: string[] = [];
-
-  for (const line of lines) {
-    const match = TOC_LIST_LINE_RE.exec(line);
-    if (!match) {
-      break;
-    }
-
-    entries.push({
-      level: tocIndentLevel(match[1]),
-      text: match[2],
-      anchor: match[3],
-    });
-    rawLines.push(line);
-  }
-
-  if (entries.length === 0) {
-    return null;
-  }
-
-  return { raw: rawLines.join("\n"), entries };
-}
-
 export function renderTocMarkdown(entries: TocEntry[]): string {
+  const marker = "[ToC]";
   if (entries.length === 0) {
-    return TOC_MARKDOWN_MARKER;
+    return marker;
   }
 
-  return entries
+  const list = entries
     .map((entry) => {
       const indent = "  ".repeat(Math.max(0, entry.level - 1));
       return `${indent}- [${entry.text}](#${entry.anchor})`;
     })
     .join("\n");
+  return `${marker}\n${list}\n[/ToC]`;
 }
 
 export interface TocEntry {
@@ -73,7 +49,8 @@ export function scanDocumentHeadings(doc: ProseMirrorNode): TocEntry[] {
       return;
     }
 
-    const text = node.textContent.trim();
+    // Strip trailing colons from the heading text for the Table of Contents
+    const text = node.textContent.trim().replace(/:+$/, "").trim();
     if (!text) {
       return;
     }
@@ -145,13 +122,43 @@ export const TableOfContents = Node.create({
     return [{ tag: 'div[data-table-of-contents="true"]' }];
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ node, HTMLAttributes }) {
+    const entries = (node.attrs.entries as TocEntry[] | undefined) ?? [];
+    const collapsed = !!node.attrs.collapsed;
+
+    const children: any[] = [];
+
+    // Header container
+    const headerChildren: any[] = [];
+    
+    // Toggle button
+    const toggleChildren: any[] = [
+      ["span", { class: `md-toc__chevron${collapsed ? " is-collapsed" : ""}`, "aria-hidden": "true" }],
+      ["span", {}, "Table of contents"]
+    ];
+    headerChildren.push(["button", { type: "button", class: "md-toc__toggle" }, ...toggleChildren]);
+    
+    children.push(["div", { class: "md-toc__header" }, ...headerChildren]);
+
+    // List of items
+    if (!collapsed && entries.length > 0) {
+      const listItems = entries.map(entry => [
+        "li",
+        { class: `md-toc__item md-toc__item--h${entry.level}` },
+        ["a", { class: "md-toc__link", href: `#${entry.anchor}` }, entry.text]
+      ]);
+      children.push(["ol", { class: "md-toc__list" }, ...listItems]);
+    } else if (entries.length === 0) {
+      children.push(["p", { class: "md-toc__empty" }, "No headings yet — add H1–H3, then Update ToC."]);
+    }
+
     return [
       "div",
       mergeAttributes(HTMLAttributes, {
         "data-table-of-contents": "true",
-        class: "md-toc",
+        class: `md-toc${collapsed ? " is-collapsed" : ""}`,
       }),
+      ...children
     ];
   },
 
@@ -209,33 +216,46 @@ export const TableOfContents = Node.create({
     name: "tableOfContents",
     level: "block",
     start(src) {
-      const markerMatch = /^\[TOC\]\s*(?:\n|$)/im.exec(src);
-      if (markerMatch) {
-        return markerMatch.index ?? -1;
-      }
-
-      const listMatch = /^\s*-\s+\[[^\]]+\]\(#[^)]+\)/m.exec(src);
-      return listMatch?.index ?? -1;
+      const markerMatch = /^\[TOC\]/i.exec(src);
+      return markerMatch ? markerMatch.index : -1;
     },
     tokenize(src) {
-      const markerMatch = /^\[TOC\]\s*(?:\n|$)/i.exec(src);
-      if (markerMatch) {
-        return {
-          type: "tableOfContents",
-          raw: markerMatch[0],
-          meta: { entries: [] as TocEntry[] },
-        };
-      }
-
-      const parsed = parseTocMarkdownBlock(src);
-      if (!parsed) {
+      const match = /^\[TOC\](?:\r?\n)?/i.exec(src);
+      if (!match) {
         return undefined;
+      }
+      const header = match[0];
+      const rest = src.slice(header.length);
+
+      const lines = rest.split(/\r?\n/);
+      const entries: TocEntry[] = [];
+      const consumedLines: string[] = [header.replace(/\r?\n$/, "")];
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (/^\[\/TOC\]$/i.test(trimmed)) {
+          consumedLines.push(line);
+          break;
+        }
+
+        const itemMatch = TOC_LIST_LINE_RE.exec(line);
+        if (!itemMatch) {
+          // Stop parsing if we hit a line that is not a list item (fallback for old-style without closing tag)
+          break;
+        }
+
+        entries.push({
+          level: tocIndentLevel(itemMatch[1]),
+          text: itemMatch[2],
+          anchor: itemMatch[3],
+        });
+        consumedLines.push(line);
       }
 
       return {
         type: "tableOfContents",
-        raw: parsed.raw,
-        meta: { entries: parsed.entries },
+        raw: consumedLines.join("\n"),
+        meta: { entries },
       };
     },
   },

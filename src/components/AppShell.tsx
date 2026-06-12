@@ -10,7 +10,7 @@ import { EmptyState } from "./EmptyState";
 import { FindReplaceBar } from "./FindReplaceBar";
 import { ImageInsertDialog } from "./ImageInsertDialog";
 import { LinkInsertDialog } from "./LinkInsertDialog";
-import { RawPane } from "./RawPane";
+import { RawPane, useRawPaneRef } from "./RawPane";
 import { ReferenceDefinitionsPanel } from "./ReferenceDefinitionsPanel";
 import { SettingsDialog } from "./SettingsDialog";
 import { StatusBar } from "./StatusBar";
@@ -35,6 +35,7 @@ export function AppShell() {
   const setActiveTab = useEditorStore((state) => state.setActiveTab);
   const closeTab = useEditorStore((state) => state.closeTab);
   const createTab = useEditorStore((state) => state.createTab);
+  const reorderTabs = useEditorStore((state) => state.reorderTabs);
   const updateTabMarkdown = useEditorStore((state) => state.updateTabMarkdown);
   const setEditor = useEditorStore((state) => state.setEditor);
   const openFileDialog = useEditorStore((state) => state.openFileDialog);
@@ -65,6 +66,7 @@ export function AppShell() {
   const clearRecentFiles = useEditorStore((state) => state.clearRecentFiles);
 
   const [aboutOpen, setAboutOpen] = useState(false);
+  const rawPaneRef = useRawPaneRef();
 
   const activeTab = useMemo(
     () => tabs.find((tab) => tab.id === activeTabId) ?? null,
@@ -154,20 +156,6 @@ export function AppShell() {
             shortcut: "Ctrl+P",
             onSelect: () => printActiveTab(),
           },
-          { id: "sep-3", label: "", separator: true, onSelect: () => {} },
-          {
-            id: "settings",
-            label: "Settings…",
-            shortcut: "Ctrl+,",
-            onSelect: () => setSettingsOpen(true),
-          },
-          { id: "sep-4", label: "", separator: true, onSelect: () => {} },
-          {
-            id: "exit",
-            label: "Exit",
-            shortcut: "Alt+F4",
-            onSelect: () => void exitApplication(),
-          },
         ],
       },
       {
@@ -244,6 +232,13 @@ export function AppShell() {
             label: "About MD",
             onSelect: () => setAboutOpen(true),
           },
+          { id: "sep-exit", label: "", separator: true, onSelect: () => {} },
+          {
+            id: "exit",
+            label: "Exit",
+            shortcut: "Alt+F4",
+            onSelect: () => void exitApplication(),
+          },
         ],
       },
     ],
@@ -307,6 +302,8 @@ export function AppShell() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [initialized, persistSession]);
 
+
+
   if (!initialized) {
     return <div className="app-loading">Loading MD…</div>;
   }
@@ -326,6 +323,7 @@ export function AppShell() {
         onSelect={setActiveTab}
         onClose={closeTab}
         onNew={() => createTab()}
+        onReorder={reorderTabs}
       />
 
       <main className="workspace">
@@ -347,43 +345,72 @@ export function AppShell() {
               className={`editor-pane ${tab.id === activeTabId ? "is-active" : ""}`}
               aria-hidden={tab.id !== activeTabId}
             >
-              {tab.id === activeTabId ? (
-                <MdEditor
-                  key={tab.id}
-                  tabId={tab.id}
-                  documentPath={tab.path}
-                  markdown={tab.markdown}
-                  editable
-                  wordWrap={config.wordWrap}
-                  fontSize={config.fontSize}
-                  zoom={config.editorZoom}
-                  isActive
-                  onMarkdownChange={(markdown) =>
-                    updateTabMarkdown(tab.id, markdown)
-                  }
-                  onEditorReady={handleEditorReady}
-                />
-              ) : null}
+              <MdEditor
+                tabId={tab.id}
+                documentPath={tab.path}
+                markdown={tab.markdown}
+                editable
+                wordWrap={config.wordWrap}
+                fontSize={config.fontSize}
+                zoom={config.editorZoom}
+                isActive={tab.id === activeTabId}
+                onMarkdownChange={(markdown) =>
+                  updateTabMarkdown(tab.id, markdown)
+                }
+                onEditorReady={handleEditorReady}
+              />
             </section>
           ))}
 
           {showRawPane && activeTab ? (
             <RawPane
+              ref={rawPaneRef}
               markdown={activeTab.markdown}
               onChange={(markdown) => updateTabMarkdown(activeTab.id, markdown)}
             />
           ) : null}
         </div>
+
+        {/* Floating Action Buttons */}
+        {!showEmptyState && activeTabId && (
+          <>
+            {config.showEditReferences !== false && (
+              <button
+                type="button"
+                className="floating-btn floating-btn--left"
+                onClick={() => toggleReferencesPanel()}
+                title={showReferencesPanel ? "Hide Reference Editor" : "Edit References"}
+              >
+                <span className="material-symbols-outlined">link</span>
+                <span>Edit References</span>
+              </button>
+            )}
+            <button
+              type="button"
+              className="floating-btn floating-btn--right"
+              onClick={() => setSettingsOpen(true)}
+              title="Settings"
+            >
+              <span className="material-symbols-outlined">settings</span>
+            </button>
+          </>
+        )}
       </main>
 
       <ReferenceDefinitionsPanel
         editor={activeEditor}
         open={showReferencesPanel}
-        onToggle={toggleReferencesPanel}
       />
 
-      {findBarOpen && activeEditor ? (
-        <FindReplaceBar key={activeTabId ?? "none"} editor={activeEditor} />
+      {findBarOpen && activeEditor && activeTab ? (
+        <FindReplaceBar
+          activeTabId={activeTab.id}
+          editor={activeEditor}
+          markdown={activeTab.markdown}
+          showRawPane={showRawPane}
+          rawPaneRef={rawPaneRef}
+          onMarkdownChange={(markdown) => updateTabMarkdown(activeTab.id, markdown)}
+        />
       ) : null}
 
       <StatusBar tab={activeTab} config={config} showRawPane={showRawPane} />

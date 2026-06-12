@@ -4,6 +4,7 @@ import { NodeSelection } from "@tiptap/pm/state";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useEditorStore } from "../stores/editorStore";
+import { ToolbarIcon } from "./toolbarIcons";
 
 interface EditorImageMenuProps {
   editor: Editor;
@@ -67,17 +68,36 @@ export function EditorImageMenu({ editor }: EditorImageMenuProps) {
       window.requestAnimationFrame(syncMenu);
     };
 
+    const handleBlur = () => {
+      setVisible(false);
+      setImagePos(null);
+    };
+
+    const handleScrollOrResize = () => {
+      window.requestAnimationFrame(syncMenu);
+    };
+
     syncMenu();
     editor.on("selectionUpdate", handleUpdate);
     editor.on("transaction", handleUpdate);
-    editor.on("blur", () => {
-      setVisible(false);
-      setImagePos(null);
+    editor.on("blur", handleBlur);
+
+    document.addEventListener("scroll", handleScrollOrResize, {
+      capture: true,
+      passive: true,
+    });
+    window.addEventListener("resize", handleScrollOrResize, {
+      passive: true,
     });
 
     return () => {
       editor.off("selectionUpdate", handleUpdate);
       editor.off("transaction", handleUpdate);
+      editor.off("blur", handleBlur);
+      document.removeEventListener("scroll", handleScrollOrResize, {
+        capture: true,
+      });
+      window.removeEventListener("resize", handleScrollOrResize);
     };
   }, [editor, syncMenu]);
 
@@ -99,23 +119,28 @@ export function EditorImageMenu({ editor }: EditorImageMenuProps) {
     >
       <button
         type="button"
-        className="selection-toolbar__button selection-toolbar__button--label"
+        className="selection-toolbar__button"
+        title="Change path"
+        aria-label="Change path"
         onMouseDown={(event) => {
           event.preventDefault();
           openImageEdit(imagePos);
         }}
       >
-        Change path
+        <ToolbarIcon id="imageEdit" />
       </button>
+      <span className="selection-toolbar__divider" aria-hidden="true" />
       <button
         type="button"
-        className="selection-toolbar__button selection-toolbar__button--label"
+        className="selection-toolbar__button"
+        title="Delete image"
+        aria-label="Delete image"
         onMouseDown={(event) => {
           event.preventDefault();
           editor.chain().focus().deleteSelection().run();
         }}
       >
-        Delete image
+        <ToolbarIcon id="imageDelete" />
       </button>
     </div>,
     document.body,

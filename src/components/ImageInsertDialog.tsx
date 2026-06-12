@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Editor } from "@tiptap/react";
 import { buildImageNodeAttrs, isTauriRuntime, toMarkdownImageSrc } from "../lib/imageSrc";
 import { pickImageFilePath } from "../lib/tauri";
+import { useDraggable } from "../hooks/useDraggable";
 
 interface ImageInsertDialogProps {
   open: boolean;
@@ -23,6 +24,7 @@ export function ImageInsertDialog({
   const [pickingFile, setPickingFile] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const isEditMode = editPos !== null;
+  const { handleMouseDown, style: dragStyle } = useDraggable(open);
 
   useEffect(() => {
     if (!open || !editor) {
@@ -121,6 +123,8 @@ export function ImageInsertDialog({
         className="modal-card insert-dialog"
         role="dialog"
         aria-labelledby="image-insert-title"
+        style={dragStyle}
+        onMouseDown={handleMouseDown}
         onClick={(event) => event.stopPropagation()}
         onKeyDown={(event) => {
           if (event.key === "Escape") {

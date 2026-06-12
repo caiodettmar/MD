@@ -13,6 +13,11 @@ export interface AppConfig {
   autoSaveMs: number;
   checkUpdates: boolean;
   recentFiles: string[];
+  showEditReferences: boolean;
+  useMaxWidth: boolean;
+  maxWidthPreset: string;
+  maxWidthCustomValue: number;
+  maxWidthCustomUnit: string;
 }
 
 export interface TabDocument {
@@ -59,6 +64,11 @@ export const DEFAULT_CONFIG: AppConfig = {
   autoSaveMs: 2000,
   checkUpdates: true,
   recentFiles: [],
+  showEditReferences: true,
+  useMaxWidth: true,
+  maxWidthPreset: "Default",
+  maxWidthCustomValue: 720,
+  maxWidthCustomUnit: "px",
 };
 
 export function fileNameFromPath(path: string): string {

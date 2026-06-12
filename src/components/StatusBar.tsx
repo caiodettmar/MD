@@ -24,20 +24,27 @@ function saveLabel(tab: TabDocument | null): string {
 }
 
 export function StatusBar({ tab, config, showRawPane }: StatusBarProps) {
+
   return (
     <footer className="status-bar">
-      <span className="status-bar__path">
-        {tab?.path ?? "Unsaved document"}
-      </span>
-      <span className="status-bar__meta">UTF-8</span>
-      <span className="status-bar__meta">{saveLabel(tab)}</span>
-      <span className="status-bar__meta">
-        {config.wordWrap ? "Wrap" : "No wrap"}
-      </span>
-      <span className="status-bar__meta">{config.editorZoom}%</span>
-      {showRawPane ? (
-        <span className="status-bar__meta">Raw</span>
-      ) : null}
+      <div className="status-bar__left">
+        <span className="status-bar__path" title={tab?.path ?? undefined}>
+          {tab?.path ?? "Unsaved document"}
+        </span>
+      </div>
+      <div className="status-bar__right">
+        <span className="status-bar__meta">UTF-8</span>
+        <span className={`status-bar__meta ${saveLabel(tab) === "Saved" ? "is-bold" : ""}`}>
+          {saveLabel(tab)}
+        </span>
+        <span className="status-bar__meta">
+          {config.wordWrap ? "Wrap" : "No wrap"}
+        </span>
+        <span className="status-bar__meta">{config.editorZoom}%</span>
+        {showRawPane ? (
+          <span className="status-bar__meta">Raw</span>
+        ) : null}
+      </div>
     </footer>
   );
 }

@@ -182,6 +182,15 @@ export const FootnoteDefinitionExtension = Node.create({
         class: "md-footnote-definition",
       }),
       ["div", { class: "md-footnote-definition__content" }, 0],
+      [
+        "button",
+        {
+          class: "md-footnote-backlink",
+          "data-footnote-backlink-id": node.attrs.id,
+          title: "Go back to reference",
+        },
+        "↑",
+      ],
     ];
   },
 
