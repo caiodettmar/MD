@@ -47,6 +47,7 @@ export const markRegistry: MarkRegistryEntry[] = [
   {
     id: "underline",
     label: "Underline",
+    shortcutLabel: "___",
     slashKeywords: ["underline", "u"],
     run: (editor) => editor.chain().focus().toggleUnderline().run(),
   },
@@ -67,7 +68,7 @@ export const markRegistry: MarkRegistryEntry[] = [
   {
     id: "superscript",
     label: "Superscript",
-    shortcutLabel: "x²",
+    shortcutLabel: "^",
     slashKeywords: ["sup", "superscript"],
     run: (editor) => editor.chain().focus().toggleSuperscript().run(),
   },

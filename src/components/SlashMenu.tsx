@@ -42,6 +42,9 @@ function getSlashIcon(key: string): string | null {
     case "block-h1": return "format_h1";
     case "block-h2": return "format_h2";
     case "block-h3": return "format_h3";
+    case "block-h4": return "format_h4";
+    case "block-h5": return "format_h5";
+    case "block-h6": return "format_h6";
     case "block-bullet": return "format_list_bulleted";
     case "block-ordered": return "format_list_numbered";
     case "block-task": return "checklist";
@@ -51,6 +54,7 @@ function getSlashIcon(key: string): string | null {
     case "block-table": return "table_chart";
     case "block-definition-list": return "list";
     case "block-toc": return "toc";
+    case "block-footnote": return "sticky_note_2";
     case "block-image": return "image";
     case "block-link": return "link";
     case "emoji-panel": return "mood";
@@ -95,6 +99,30 @@ const blockItems = [
     group: "Blocks",
     keywords: ["h3", "heading"],
     run: (e: Editor) => e.chain().focus().toggleHeading({ level: 3 }).run(),
+  },
+  {
+    id: "block-h4",
+    label: "Heading 4",
+    hint: "####",
+    group: "Blocks",
+    keywords: ["h4", "heading"],
+    run: (e: Editor) => e.chain().focus().toggleHeading({ level: 4 }).run(),
+  },
+  {
+    id: "block-h5",
+    label: "Heading 5",
+    hint: "#####",
+    group: "Blocks",
+    keywords: ["h5", "heading"],
+    run: (e: Editor) => e.chain().focus().toggleHeading({ level: 5 }).run(),
+  },
+  {
+    id: "block-h6",
+    label: "Heading 6",
+    hint: "######",
+    group: "Blocks",
+    keywords: ["h6", "heading"],
+    run: (e: Editor) => e.chain().focus().toggleHeading({ level: 6 }).run(),
   },
   {
     id: "block-bullet",
@@ -186,6 +214,35 @@ const blockItems = [
     keywords: ["link", "url", "href"],
     run: () => {
       useEditorStore.getState().setLinkDialogOpen(true);
+    },
+  },
+  {
+    id: "block-footnote",
+    label: "Footnote",
+    hint: "[^1]",
+    group: "Insert",
+    keywords: ["footnote", "note", "ref"],
+    run: (e: Editor) => {
+      let nextId = 1;
+      const footnoteType = e.schema.marks.footnote;
+      if (footnoteType) {
+        const ids = new Set<number>();
+        e.state.doc.descendants((node) => {
+          node.marks.forEach((mark) => {
+            if (mark.type === footnoteType && mark.attrs.id) {
+              const num = parseInt(mark.attrs.id, 10);
+              if (!isNaN(num)) {
+                ids.add(num);
+              }
+            }
+          });
+        });
+        while (ids.has(nextId)) {
+          nextId++;
+        }
+      }
+      const idStr = String(nextId);
+      e.chain().focus().insertContent(idStr).toggleMark("footnote", { id: idStr }).run();
     },
   },
 ];

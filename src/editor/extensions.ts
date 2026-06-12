@@ -11,6 +11,7 @@ import TaskItem from "@tiptap/extension-task-item";
 import TaskList from "@tiptap/extension-task-list";
 import { Color } from "@tiptap/extension-color";
 import Underline from "@tiptap/extension-underline";
+import { nodeInputRule } from "@tiptap/core";
 import { Markdown } from "@tiptap/markdown";
 import StarterKit from "@tiptap/starter-kit";
 import { FootnoteDefinitionExtension } from "./footnoteDefinitionExtension";
@@ -43,6 +44,52 @@ const NoInputBold = Bold.extend({ addInputRules: () => [] });
 const NoInputItalic = Italic.extend({ addInputRules: () => [] });
 const NoInputCode = Code.extend({ addInputRules: () => [] });
 const NoInputStrike = Strike.extend({ addInputRules: () => [] });
+
+const MarkdownUnderline = Underline.extend({
+  renderMarkdown(node, helpers) {
+    return `___${helpers.renderChildren(node)}___`;
+  },
+  parseMarkdown(token, helpers) {
+    return helpers.applyMark("underline", helpers.parseInline(token.tokens || []));
+  },
+  markdownTokenizer: {
+    name: "underline",
+    level: "inline",
+    start(src) {
+      return src.indexOf("___");
+    },
+    tokenize(src, _tokens, lexer) {
+      const rule = /^___((?:(?!___)[^\n])+)___/;
+      const match = rule.exec(src);
+      if (!match) {
+        return undefined;
+      }
+      const text = match[1];
+      return {
+        type: "underline",
+        raw: match[0],
+        text,
+        tokens: lexer.inlineTokens(text),
+      };
+    },
+  },
+});
+
+const CustomTaskItem = TaskItem.extend({
+  addInputRules() {
+    const parentRules = this.parent?.() ?? [];
+    return [
+      ...parentRules,
+      nodeInputRule({
+        find: /^\s*(\[([ xX])\])\s$/,
+        type: this.type,
+        getAttributes: (match) => ({
+          checked: (match[2] || "").toLowerCase() === "x",
+        }),
+      }),
+    ];
+  },
+});
 
 export function createEditorExtensions(
   getDocumentPath: () => string | null = () => null,
@@ -89,7 +136,7 @@ export function createEditorExtensions(
       },
     }),
     LinkClickGuard,
-    Underline,
+    MarkdownUnderline,
     MarkdownHighlight.configure({
       multicolor: true,
       HTMLAttributes: {
@@ -101,7 +148,7 @@ export function createEditorExtensions(
     MarkdownTextStyle,
     Color,
     TaskList,
-    TaskItem.configure({
+    CustomTaskItem.configure({
       nested: true,
       HTMLAttributes: {
         class: "md-task-item",

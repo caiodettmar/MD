@@ -408,7 +408,7 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
   const renderHeadingsToolbar = () => (
     <>
       {backButton}
-      {([1, 2, 3] as const).map((level) => (
+      {([1, 2, 3, 4, 5, 6] as const).map((level) => (
         <button
           key={level}
           type="button"

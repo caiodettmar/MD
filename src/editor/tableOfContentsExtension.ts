@@ -15,16 +15,44 @@ function tocIndentLevel(indent: string): number {
   return Math.min(3, Math.floor(indent.length / 2) + 1);
 }
 
+export function computeTocNumbers(entries: TocEntry[]): string[] {
+  const counters: number[] = [];
+  const numbers: string[] = [];
+
+  for (const entry of entries) {
+    const level = entry.level;
+
+    while (counters.length > level) {
+      counters.pop();
+    }
+
+    while (counters.length < level - 1) {
+      counters.push(1);
+    }
+
+    if (counters.length === level) {
+      counters[level - 1]++;
+    } else {
+      counters.push(1);
+    }
+
+    numbers.push(counters.join("."));
+  }
+
+  return numbers;
+}
+
 export function renderTocMarkdown(entries: TocEntry[]): string {
   const marker = "[ToC]";
   if (entries.length === 0) {
     return marker;
   }
 
+  const numbers = computeTocNumbers(entries);
   const list = entries
-    .map((entry) => {
+    .map((entry, index) => {
       const indent = "  ".repeat(Math.max(0, entry.level - 1));
-      return `${indent}- [${entry.text}](#${entry.anchor})`;
+      return `${indent}- [${numbers[index]} ${entry.text}](#${entry.anchor})`;
     })
     .join("\n");
   return `${marker}\n${list}\n[/ToC]`;
@@ -45,7 +73,7 @@ export function scanDocumentHeadings(doc: ProseMirrorNode): TocEntry[] {
     }
 
     const level = Number(node.attrs.level ?? 1);
-    if (level > 3) {
+    if (level > 6) {
       return;
     }
 
@@ -125,6 +153,7 @@ export const TableOfContents = Node.create({
   renderHTML({ node, HTMLAttributes }) {
     const entries = (node.attrs.entries as TocEntry[] | undefined) ?? [];
     const collapsed = !!node.attrs.collapsed;
+    const numbers = computeTocNumbers(entries);
 
     const children: any[] = [];
 
@@ -142,14 +171,14 @@ export const TableOfContents = Node.create({
 
     // List of items
     if (!collapsed && entries.length > 0) {
-      const listItems = entries.map(entry => [
+      const listItems = entries.map((entry, index) => [
         "li",
         { class: `md-toc__item md-toc__item--h${entry.level}` },
-        ["a", { class: "md-toc__link", href: `#${entry.anchor}` }, entry.text]
+        ["a", { class: "md-toc__link", href: `#${entry.anchor}` }, `${numbers[index]} ${entry.text}`]
       ]);
       children.push(["ol", { class: "md-toc__list" }, ...listItems]);
     } else if (entries.length === 0) {
-      children.push(["p", { class: "md-toc__empty" }, "No headings yet — add H1–H3, then Update ToC."]);
+      children.push(["p", { class: "md-toc__empty" }, "No headings yet — add H1–H6, then Update ToC."]);
     }
 
     return [

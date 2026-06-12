@@ -2,6 +2,7 @@ import { NodeViewWrapper } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/react";
 import {
   scanDocumentHeadings,
+  computeTocNumbers,
   type TocEntry,
 } from "./tableOfContentsExtension";
 
@@ -57,29 +58,32 @@ export function TableOfContentsView({
         {!collapsed ? (
           entries.length > 0 ? (
             <ol className="md-toc__list">
-              {entries.map((entry) => (
-                <li
-                  key={`${entry.anchor}-${entry.level}-${entry.text}`}
-                  className={`md-toc__item md-toc__item--h${entry.level}`}
-                >
-                  <a
-                    href={`#${entry.anchor}`}
-                    className="md-toc__link"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      const target = editor.view.dom.querySelector(
-                        `#${CSS.escape(entry.anchor)}`,
-                      );
-                      target?.scrollIntoView({ behavior: "smooth", block: "start" });
-                    }}
+              {(() => {
+                const numbers = computeTocNumbers(entries);
+                return entries.map((entry, index) => (
+                  <li
+                    key={`${entry.anchor}-${entry.level}-${entry.text}`}
+                    className={`md-toc__item md-toc__item--h${entry.level}`}
                   >
-                    {entry.text}
-                  </a>
-                </li>
-              ))}
+                    <a
+                      href={`#${entry.anchor}`}
+                      className="md-toc__link"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        const target = editor.view.dom.querySelector(
+                          `#${CSS.escape(entry.anchor)}`,
+                        );
+                        target?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }}
+                    >
+                      {numbers[index]} {entry.text}
+                    </a>
+                  </li>
+                ));
+              })()}
             </ol>
           ) : (
-            <p className="md-toc__empty">No headings yet — add H1–H3, then Update ToC.</p>
+            <p className="md-toc__empty">No headings yet — add H1–H6, then Update ToC.</p>
           )
         ) : null}
       </div>

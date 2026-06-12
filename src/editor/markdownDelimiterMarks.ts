@@ -37,9 +37,27 @@ export const MarkdownDelimiterMarks = Extension.create({
     return [
       toggleStoredMarkRule("bold", "**"),
       toggleStoredMarkRule("italic", "*"),
+      toggleStoredMarkRule("underline", "___"),
       toggleStoredMarkRule("strike", "~~"),
       toggleStoredMarkRule("highlight", "=="),
       toggleStoredMarkRule("code", "`"),
+      new InputRule({
+        find: /^\|\*(\d+)\s$/,
+        handler: ({ state, range, match }) => {
+          const size = parseInt(match[1], 10);
+          if (isNaN(size) || size < 1) {
+            return null;
+          }
+
+          const { tr } = state;
+          tr.delete(range.from, range.to);
+
+          const editor = this.editor;
+          setTimeout(() => {
+            editor.chain().focus().insertTable({ rows: size, cols: size, withHeaderRow: true }).run();
+          }, 0);
+        },
+      }),
       // Subscript via `~ ` (tilde + space). Space avoids bare `~` in words;
       // guard skips `~~` strikethrough. Same trigger toggles stored mark off.
       new InputRule({
