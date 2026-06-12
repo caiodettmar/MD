@@ -139,7 +139,7 @@ export function ShikiCodeBlockView({ node, updateAttributes }: NodeViewProps) {
           setMermaidError(null);
           updateAttributes({ mermaidSvg: svg });
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (active) {
           let errMsg = "Invalid Mermaid syntax";
           if (err instanceof Error) {

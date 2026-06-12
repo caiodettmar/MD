@@ -1,5 +1,5 @@
 import { NodeViewWrapper } from "@tiptap/react";
-import type { NodeViewProps } from "@tiptap/react";
+import type { NodeViewProps, Editor } from "@tiptap/react";
 import {
   scanDocumentHeadings,
   buildTocTree,
@@ -7,7 +7,7 @@ import {
   type TocTreeNode,
 } from "./tableOfContentsExtension";
 
-function RenderTocTree({ nodes, editor }: { nodes: TocTreeNode[]; editor: any }) {
+function RenderTocTree({ nodes, editor }: { nodes: TocTreeNode[]; editor: Editor }) {
   if (nodes.length === 0) {
     return null;
   }
