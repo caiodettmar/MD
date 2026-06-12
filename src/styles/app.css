@@ -971,6 +971,30 @@
   color: var(--highlight-fg);
 }
 
+.md-editor-surface ol {
+  counter-reset: ol-item;
+  list-style: none !important;
+  padding-left: 1.5rem;
+  margin: 0.75rem 0;
+}
+
+.md-editor-surface ol > li {
+  counter-increment: ol-item;
+  list-style: none !important;
+}
+
+.md-editor-surface ol > li::before {
+  content: counters(ol-item, ".") ". ";
+  font-weight: normal;
+  color: var(--text-muted);
+  margin-right: 0.35rem;
+  display: inline-block;
+}
+
+.md-editor-surface ol li ol > li::before {
+  content: counters(ol-item, ".") " ";
+}
+
 .md-editor-surface ul[data-type="taskList"] {
   list-style: none;
   padding-left: 0;

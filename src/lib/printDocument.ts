@@ -147,6 +147,27 @@ const PRINT_STYLES = `
     text-decoration: none;
   }
 
+  /* Nested ordered lists */
+  ol {
+    counter-reset: ol-item;
+    list-style: none !important;
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+  }
+  ol > li {
+    counter-increment: ol-item;
+    list-style: none !important;
+  }
+  ol > li::before {
+    content: counters(ol-item, ".") ". ";
+    color: #6b7280;
+    margin-right: 0.35rem;
+    display: inline-block;
+  }
+  ol li ol > li::before {
+    content: counters(ol-item, ".") " ";
+  }
+
   /* Footnotes */
   .md-footnote-ref {
     color: #2563eb;
